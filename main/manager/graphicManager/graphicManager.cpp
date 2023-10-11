@@ -10,8 +10,8 @@ using namespace character::enemy;
 
 #define CAMERA_ZOOM 2.f
 
-#define VIEW_SIZE sf::Vector2f(1440.f / CAMERA_ZOOM, 810.f / CAMERA_ZOOM)
 #define WINDOW_SIZE sf::Vector2i(1440, 810)
+#define VIEW_SIZE sf::Vector2f(1440.f / CAMERA_ZOOM, 810.f / CAMERA_ZOOM)
 
 #define DISTORTION_X true
 #define DISTORTION_Y true
