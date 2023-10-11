@@ -1,0 +1,244 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main\stage\stage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx\stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main\manager\graphicManager\graphicManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main\ente\ente.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main\ente\entity\entity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main\ente\entity\character\character.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="auxiliary\traits\animated\animated.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="auxiliary\list\entitylist\entityList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main\ente\entity\character\player\player.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="auxiliary\traits\subject\subject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main\manager\eventManager\eventManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="auxiliary\traits\observer\observer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="game.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="auxiliary\traits\state\gameState\gameState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="auxiliary\traits\state\state.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="auxiliary\traits\state\gameState\Play\playState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="auxiliary\traits\state\gameState\Pause\pauseState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="auxiliary\traits\state\gameState\MainMenu\mainMenuState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main\GUI\parallax\parallax.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main\manager\colisionManager\colisionManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main\ente\entity\obstacle\obstacle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main\ente\entity\character\enemy\enemy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="auxiliary\node\node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main\ente\entity\character\enemy\enemyMelee\enemyMelee.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main\ente\entity\obstacle\tile\tile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main\stage\initialStage\initialStage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="entry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="main\stage\stage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx\stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="main\manager\graphicManager\graphicManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="main\ente\ente.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="main\ente\entity\entity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="main\ente\entity\character\character.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="auxiliary\traits\animated\animated.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="auxiliary\list\list.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="auxiliary\iterator\iterator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="auxiliary\list\listElement\listElement.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="auxiliary\list\entitylist\entityList.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="main\ente\entity\character\player\player.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="auxiliary\traits\observer\observer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="auxiliary\traits\subject\subject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="main\manager\eventManager\eventManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="game.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="auxiliary\traits\state\state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="auxiliary\traits\state\gameState\gameState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="auxiliary\traits\state\gameState\Play\playState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="auxiliary\traits\state\gameState\Pause\pauseState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="auxiliary\traits\state\gameState\MainMenu\mainMenuState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="main\GUI\parallax\parallax.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="main\manager\colisionManager\colisionManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="main\ente\entity\obstacle\obstacle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="main\ente\entity\character\enemy\enemy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="auxiliary\node\node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="main\ente\entity\character\enemy\enemyMelee\enemyMelee.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="main\ente\entity\obstacle\tile\tile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="main\stage\initialStage\initialStage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\textures\sprite_sheet\skeleton.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\textures\sprite_sheet\p2spritesheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\textures\sprite_sheet\p1spritesheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\textures\tile_sheet\tile_sheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\textures\parallaxes\foreground.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\textures\parallaxes\back-buildings.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\textures\parallaxes\Background_0.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\textures\parallaxes\Background_1.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\textures\parallaxes\Background_2.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\textures\parallaxes\far-buildings.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\%40original_sources\Skeleton enemy.zip" />
+    <None Include="resources\%40original_sources\FreeKnight_v1.zip" />
+    <None Include="sfml-window-d-2.dll" />
+    <None Include="openal32.dll" />
+    <None Include="sfml-audio-2.dll" />
+    <None Include="sfml-audio-d-2.dll" />
+    <None Include="sfml-graphics-2.dll" />
+    <None Include="sfml-graphics-d-2.dll" />
+    <None Include="sfml-network-2.dll" />
+    <None Include="sfml-network-d-2.dll" />
+    <None Include="sfml-system-2.dll" />
+    <None Include="sfml-system-d-2.dll" />
+    <None Include="sfml-window-2.dll" />
+    <None Include="game Debug.pdb" />
+    <None Include="game Debug.exe" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="resources\fonts\PixelSmall.ttf" />
+    <Font Include="resources\fonts\EquipmentPro.ttf" />
+    <Font Include="resources\fonts\PixelHigh.ttf" />
+    <Font Include="resources\fonts\PixelMiddle.ttf" />
+  </ItemGroup>
+</Project>
