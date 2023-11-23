@@ -6,17 +6,16 @@ namespace auxiliary
 	class AbstractIterator
 	{
 	public:
-		AbstractIterator() :
-			listPosition(0)
+		AbstractIterator(unsigned int position = 0) :
+			listPosition(position)
 		{};
 		virtual ~AbstractIterator()
 		{};
 
-		unsigned int& ListPosition() { return this->listPosition; };
+		const unsigned int& ListPosition() const { return this->listPosition; };
 
-		virtual void First() = 0;
+		virtual void Restart() = 0;
 		virtual void Next() = 0;
-		virtual void Previous() = 0;
 		virtual bool Ended() = 0;
 		virtual T& Current() = 0;
 

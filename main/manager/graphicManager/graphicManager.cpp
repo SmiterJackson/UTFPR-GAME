@@ -1,6 +1,7 @@
 #include "graphicManager.h"
 #include "ente/entity/obstacle/obstacle.h"
 #include "ente/entity/character/enemy/enemy.h"
+using namespace trait;
 using namespace manager;
 using namespace obstacle;
 using namespace character;
@@ -20,15 +21,7 @@ using namespace character::enemy;
 
 #define OFF_CAMERA_EXTRA_SPACE_COEFF 0.5f
 
-const float         GraphicManager::cameraExtraSpace    = OFF_CAMERA_EXTRA_SPACE_COEFF;
-TextureMap*         GraphicManager::textures            = new TextureMap();
 GraphicManager*     GraphicManager::instance            = nullptr;
-trait::GameState*   GraphicManager::pState              = nullptr;
-sf::Font*           GraphicManager::font                = nullptr;
-sf::RenderWindow*   GraphicManager::window              = nullptr;
-sf::FloatRect       GraphicManager::cameraLim           = sf::FloatRect();
-sf::View            GraphicManager::view                = sf::View(sf::Vector2f(), VIEW_SIZE);
-sf::Vector2f        GraphicManager::gridScale           = sf::Vector2f();
 
 GraphicManager* GraphicManager::GetInstance()
 {
@@ -48,38 +41,41 @@ void GraphicManager::DeconsInstance()
 };
 
 GraphicManager::GraphicManager() :
+    pDebugSubjectFlag(EventManager::DebugFlagSubject::GetInstance()),
     originalSize(VIEW_SIZE),
+    pState(nullptr),
+    textures(),
+    window(sf::VideoMode(WINDOW_SIZE.x, WINDOW_SIZE.y), "JANELA DE CONTEXTO"),
+    cameraLim(),
+    gridScale(),
+    font(),
+    view(sf::Vector2f(), VIEW_SIZE),
     zoom(CAMERA_ZOOM), 
     distort_x(DISTORTION_X), 
     distort_y(DISTORTION_Y),
     bar_x(BLCK_BAR_X), 
-    bar_y(BLCK_BAR_Y)
+    bar_y(BLCK_BAR_Y),
+    flagState(false)
 {
-    window = new sf::RenderWindow(sf::VideoMode(WINDOW_SIZE.x, WINDOW_SIZE.y), "JANELA DE CONTEXTO");
-    window->setKeyRepeatEnabled(false);
-    window->setFramerateLimit(60);
+    window.setKeyRepeatEnabled(false);
+    window.setFramerateLimit(60);
 
-    if(textures == nullptr)
-        textures = new TextureMap();
+    font.loadFromFile(PATH);
 
-    if (font == nullptr)
-    {
-        font = new sf::Font();
-
-        if (font != nullptr)
-            font->loadFromFile(PATH);
-        else
-            std::cerr << "Nao foi possivel alocar uma fonte de texto: graphic_manager." << std::endl;
-    }
-};
+    pDebugSubjectFlag->AttachObs(this);
+}
 GraphicManager::~GraphicManager()
 {
-    if (window != nullptr)
-        delete window;
+    pDebugSubjectFlag->DettachObs(this);
+}
 
-    if (font != nullptr)
-        delete font;
-};
+void GraphicManager::UpdateObs(const Subject* alteredSub)
+{
+    if (alteredSub == nullptr || alteredSub != pDebugSubjectFlag)
+        return;
+
+    flagState = pDebugSubjectFlag->GetDebugFlag();
+}
 
 void GraphicManager::UpdateCamera()
 {
@@ -175,16 +171,16 @@ void GraphicManager::UpdateCamera()
     }
 
     view.setCenter(least);
-};
-void GraphicManager::WindowResize() const
+}
+void GraphicManager::WindowResize()
 {
     sf::FloatRect newPort(0.f, 0.f, 1.f, 1.f);
     sf::Vector2f newSize(this->originalSize.x, this->originalSize.y);
 
     // Propor��o do novo tamanho de tela em fun��o do tamanho anterior
     sf::Vector2f ratio(
-        window->getSize().x / this->zoom / this->originalSize.x,
-        window->getSize().y / this->zoom / this->originalSize.y
+        window.getSize().x / this->zoom / this->originalSize.x,
+        window.getSize().y / this->zoom / this->originalSize.y
     );
 
     if (this->distort_x)
@@ -217,12 +213,12 @@ void GraphicManager::WindowResize() const
 
     view.setSize(newSize);
     view.setViewport(newPort);
-};
+}
 
-const std::list<Obstacle*> GraphicManager::GetCameraEntities(const std::list<Obstacle*>& entities)
+const std::list<Entity*> GraphicManager::GetCameraEntities(const std::list<Entity*>& entities)
 {
-    std::list<Obstacle*>::const_iterator cIt;
-    std::list<Obstacle*> entitiesInCam;
+    std::list<Entity*>::const_iterator cIt;
+    std::list<Entity*> entitiesInCam;
 
     sf::Vector2f entSize;
     float delta_X = 0;
@@ -232,49 +228,12 @@ const std::list<Obstacle*> GraphicManager::GetCameraEntities(const std::list<Obs
         entSize = (*cIt)->GetSize() / 2.f;
         delta_X = fabs(GetViewPosition().x - (*cIt)->GetPosition().x);
 
-        if (delta_X <= (GetViewSize().x / 2.f * (1.f + cameraExtraSpace)) + entSize.x)
+        if (delta_X <= (GetViewSize().x / 2.f * (1.f + OFF_CAMERA_EXTRA_SPACE_COEFF)) + entSize.x)
             entitiesInCam.emplace_back((*cIt));
     }
 
     return entitiesInCam;
-};
-const std::list<Enemy*> GraphicManager::GetCameraEntities(const std::vector<Enemy*>& entities)
-{
-    std::vector<Enemy*>::const_iterator cIt;
-    std::list<Enemy*> entitiesInCam;
-
-    sf::Vector2f entSize;
-    float delta_X = 0;
-
-    for (cIt = entities.cbegin(); cIt != entities.cend(); cIt++)
-    {
-        entSize = (*cIt)->GetSize() / 2.f;
-        delta_X = fabs(GetViewPosition().x - (*cIt)->GetPosition().x);
-
-        if (delta_X <= (GetViewSize().x / 2.f * (1.f + cameraExtraSpace)) + entSize.x)
-            entitiesInCam.emplace_back((*cIt));
-    }
-
-    return entitiesInCam;
-};
-
-void GraphicManager::Draw(const sf::RectangleShape& drawTarget)
-{
-    window->draw(drawTarget);
-};
-void GraphicManager::Draw(const sf::CircleShape& drawTarget)
-{
-    window->draw(drawTarget);
-};
-void GraphicManager::Draw(const sf::Sprite& drawTarget)
-{
-    window->draw(drawTarget);
-};
-void GraphicManager::Draw(const sf::Text& drawTarget)
-{
-    window->draw(drawTarget);
-};
-
+}
 sf::Texture* GraphicManager::LoadTexture(std::string texturePath, sf::IntRect sheetCut, bool repeated)
 {
     std::stringstream sstring;
@@ -285,12 +244,11 @@ sf::Texture* GraphicManager::LoadTexture(std::string texturePath, sf::IntRect sh
     if (texturePath == "resources/textures/tile_sheet/tile_sheet.png")
         bool sex = true;
 
-    if(!textures->empty())
-        for (TextureMap::value_type vlt : *textures)
-        {
-            if (vlt.first == texturePath || vlt.first == sstring.str())
-                return vlt.second;
-        }
+    for (TextureMap::value_type vlt : textures)
+    {
+        if (vlt.first == texturePath || vlt.first == sstring.str())
+            return vlt.second;
+    }
 
     newTexture = new sf::Texture();
     if (newTexture == nullptr)
@@ -303,23 +261,44 @@ sf::Texture* GraphicManager::LoadTexture(std::string texturePath, sf::IntRect sh
     {
         newTexture->loadFromFile(texturePath, sheetCut);
         newTexture->setRepeated(repeated);
-        textures->insert(TextureMap::value_type(sstring.str(), newTexture));
+        textures.insert(TextureMap::value_type(sstring.str(), newTexture));
     }
     else
     {
         newTexture->loadFromFile(texturePath);
         newTexture->setRepeated(repeated);
-        textures->insert(TextureMap::value_type(texturePath, newTexture));
+        textures.insert(TextureMap::value_type(texturePath, newTexture));
     }
 
     return newTexture;
-};
+}
+
+void GraphicManager::Draw(const sf::RectangleShape& drawTarget)
+{
+    window.draw(drawTarget);
+}
+void GraphicManager::Draw(const sf::CircleShape& drawTarget)
+{
+    window.draw(drawTarget);
+}
+void GraphicManager::Draw(const sf::Sprite& drawTarget)
+{
+    window.draw(drawTarget);
+}
+void GraphicManager::Draw(const sf::Text& drawTarget)
+{
+    window.draw(drawTarget);
+}
+
 void GraphicManager::Update()
 {
-    window->clear();
+    window.clear();
 
-    pState->Print();
+    if(!flagState)
+        pState->Print();
+    else
+        pState->DebugPrint();
 
-    window->setView(view);
-    window->display();
+    window.setView(view);
+    window.display();
 };

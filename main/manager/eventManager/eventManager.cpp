@@ -97,6 +97,7 @@ void EventManager::DeconsInstance()
 };
 
 EventManager::EventManager():
+	pGraphicManager(GraphicManager::GetInstance()),
 	pInputSubject(InputSubject::GetInstance()),
 	pDebugFlagSub(DebugFlagSubject::GetInstance())
 {
@@ -128,15 +129,18 @@ void EventManager::UpdateObs(const trait::Subject* alteredSub)
 void EventManager::Update()
 {
 	sf::Event _event;
-	while(GraphicManager::GetWindow().pollEvent(_event))
+	if (pGraphicManager == nullptr)
+		return;
+
+	while(pGraphicManager->GetWindow().pollEvent(_event))
 	{
 		switch (_event.type)
 		{
 		case sf::Event::Closed:
-			GraphicManager::CloseWindow();
+			pGraphicManager->CloseWindow();
 			break;
 		case sf::Event::Resized:
-			GraphicManager::GetInstance()->WindowResize();
+			pGraphicManager->WindowResize();
 			break;
 		default:
 			this->pInputSubject->SetEvent(_event);

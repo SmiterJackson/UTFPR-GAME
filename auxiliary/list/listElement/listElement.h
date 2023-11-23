@@ -11,28 +11,25 @@ namespace auxiliary
 		ListElement() :
 			info(), previous(nullptr), next(nullptr)
 		{};
-		ListElement(const T* _info) :
-			info(*_info), previous(nullptr), next(nullptr)
-		{};
-		ListElement(const T* _info, ListElement<T>* _previous) :
-			info(*_info), previous(_previous), next(nullptr)
-		{};
-		ListElement(const T* _info, ListElement<T>* _previous, ListElement<T>* _next) :
-			info(*_info), previous(_previous), next(_next)
+		ListElement(T& _info, ListElement<T>* _previous = nullptr, ListElement<T>* _next = nullptr) :
+			info(_info), previous(_previous), next(_next)
 		{};
 		~ListElement()
-		{};
+		{
+			if (previous != nullptr)
+				this->previous->SetNext(this->next);
+
+			if(next != nullptr)
+				this->next->SetPrevious(this->previous);
+		};
 
 		T& GetInfo() { return this->info; };
-		ListElement<T>* const GetPrevious() { return this->previous; };
-		ListElement<T>* const GetNext() { return this->next; };
+		ListElement<T>* GetPrevious() { return this->previous; };
+		ListElement<T>* GetNext() { return this->next; };
 
-		void SetInfo(const T* _info)
+		void SetInfo(T& _info)
 		{
-			if (_info == nullptr)
-				return;
-
-			this->info = *_info;
+			this->info = _info;
 		};
 		void SetPrevious(ListElement<T>* _previous)
 		{
@@ -43,13 +40,13 @@ namespace auxiliary
 			this->next = _next;
 		};
 
-		bool operator!= (ListElement<T>& other)
+		bool operator!= (const ListElement<T>& other)
 		{
-			return this->GetInfo() != other.GetInfo();
+			return info != info;
 		}
-		bool operator== (ListElement<T>& other)
+		bool operator== (const ListElement<T>& other)
 		{
-			return this->GetInfo() == other.GetInfo();
+			return info == info;
 		}
 
 	private:

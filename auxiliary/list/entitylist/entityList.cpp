@@ -13,44 +13,44 @@ void EntityList::AddEntity(Entity* entity)
 
 	this->entities.PushBack(entity);
 };
-void EntityList::AddRange(std::list<Entity*>* _entities)
+void EntityList::AddRange(std::list<Entity*>& _entities)
 {
 	std::list<Entity*>::iterator it;
 
-	if (_entities == nullptr)
-		return;
-
-	for (it = _entities->begin(); it != _entities->end(); it++)
+	for (it = _entities.begin(); it != _entities.end(); it++)
 		this->entities.PushBack(*it);
 };
 void EntityList::RemoveEntity(const unsigned long long int entityId)
 {
-	MyList<Entity*>::Iterator it = this->entities.begin()--;
-
-	do
+	MyList<Entity*>::Iterator it = this->entities.begin();
+	
+	while (it != this->entities.end())
 	{
-		it++;
 		if ((*it)->GetId() == entityId)
 		{
 			this->entities.PopAt(it);
-			break;
+			return;
 		}
-	} while (it != this->entities.end());
+		it++;
+	}
+
+	if ((*it)->GetId() == entityId)
+		this->entities.PopAt(it);
 };
-void EntityList::RemoveRange(const std::vector<unsigned long long int>& entityId)
+void EntityList::RemoveRange(const std::list<unsigned long long int>& entityId)
 {
-	std::vector<unsigned long long int>::const_iterator cIt;
-	MyList<Entity*>::Iterator it = this->entities.begin()--;
+	std::list<unsigned long long int>::const_iterator cIt;
+	MyList<Entity*>::Iterator it;
 
 	for (cIt = entityId.cbegin(); cIt != entityId.cend(); cIt++)
 	{
-		do
+		for (it = this->entities.begin(); it != this->entities.end(); it++)
 		{
-			it++;
-			if ((*it)->GetId() == (*cIt))
+			if (*cIt == (*it)->GetId())
 			{
 				this->entities.PopAt(it);
+				break;
 			}
-		} while (it != this->entities.end());
+		}
 	}
 };

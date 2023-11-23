@@ -5,7 +5,7 @@
 #include "auxiliary/traits/state/gameState/Play/playState.h"
 #include "manager/graphicManager/graphicManager.h"
 
-class Game
+class Game : public trait::Observer
 {
 public:
 	static Game* GetInstance();
@@ -25,6 +25,8 @@ public:
 	static float& GetElapsedTime() { return elapsedTime; };
 	static trait::GameState* GetGameState() { return pState; };
 
+	void UpdateObs(const trait::Subject* alteredSub);
+
 	void MainMenu();
 	void Pause();
 	void Play();
@@ -39,7 +41,10 @@ private:
 
 	manager::EventManager* pEventManager;
 	manager::GraphicManager* pGraphicManager;
+	manager::EventManager::DebugFlagSubject* pDebugSubjectFlag;
 
 	static trait::GameState* pState;
 	static Game* instance;
+
+	bool flagState;
 };

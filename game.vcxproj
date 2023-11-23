@@ -97,7 +97,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)dependencies\SFML-2.5.1\include;$(SolutionDir)main;$(SolutionDir)stdafx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>Default</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -115,7 +115,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)dependencies\SFML-2.5.1\include;$(SolutionDir)main;$(SolutionDir)stdafx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>Default</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -177,7 +177,8 @@
     <ClCompile Include="main\ente\entity\character\enemy\enemy.cpp" />
     <ClCompile Include="main\ente\ente.cpp" />
     <ClCompile Include="main\ente\entity\character\character.cpp" />
-    <ClCompile Include="main\ente\entity\character\enemy\enemyMelee\enemyMelee.cpp" />
+    <ClCompile Include="main\ente\entity\character\enemy\Demon\demon.cpp" />
+    <ClCompile Include="main\ente\entity\character\enemy\Skeleton\skeleton.cpp" />
     <ClCompile Include="main\ente\entity\character\player\player.cpp" />
     <ClCompile Include="main\ente\entity\entity.cpp" />
     <ClCompile Include="main\ente\entity\obstacle\obstacle.cpp" />
@@ -199,6 +200,7 @@
     <ClInclude Include="auxiliary\list\list.h" />
     <ClInclude Include="auxiliary\list\listElement\listElement.h" />
     <ClInclude Include="auxiliary\traits\observer\observer.h" />
+    <ClInclude Include="auxiliary\traits\performer\performer.h" />
     <ClInclude Include="auxiliary\traits\state\gameState\gameState.h" />
     <ClInclude Include="auxiliary\traits\state\gameState\MainMenu\mainMenuState.h" />
     <ClInclude Include="auxiliary\traits\state\gameState\Pause\pauseState.h" />
@@ -208,7 +210,8 @@
     <ClInclude Include="main\ente\entity\character\enemy\enemy.h" />
     <ClInclude Include="main\ente\ente.h" />
     <ClInclude Include="main\ente\entity\character\character.h" />
-    <ClInclude Include="main\ente\entity\character\enemy\enemyMelee\enemyMelee.h" />
+    <ClInclude Include="main\ente\entity\character\enemy\Demon\demon.h" />
+    <ClInclude Include="main\ente\entity\character\enemy\Skeleton\skeleton.h" />
     <ClInclude Include="main\ente\entity\character\player\player.h" />
     <ClInclude Include="main\ente\entity\entity.h" />
     <ClInclude Include="main\ente\entity\obstacle\obstacle.h" />
@@ -236,7 +239,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="game Debug.exe" />
-    <None Include="game Debug.pdb" />
     <None Include="openal32.dll" />
     <None Include="resources\%40original_sources\FreeKnight_v1.zip" />
     <None Include="resources\%40original_sources\Skeleton enemy.zip" />

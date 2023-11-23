@@ -1,11 +1,11 @@
 #include "parallax.h"
-#include "manager/graphicManager/graphicManager.h"
 using namespace GUI;
 using namespace manager;
 
 #define NUM_BCKG_INSTANCES 3U
 
 Parallax::Parallax(const std::vector<std::string>& paths, const float _scale):
+	Ente(Type::BACKGROUND, PrintPriority::background),
 	backGrounds(),
 	lastPos(sf::Vector2f(0.f, 0.f)),
 	layers_spd(1.f),
@@ -35,7 +35,7 @@ void Parallax::SetBackgrounds(const std::vector<std::string>& paths)
 	this->backGrounds.reserve(paths.size());
 	for (cIt = paths.cbegin(); cIt != paths.cend(); cIt++)
 	{
-		txt = GraphicManager::LoadTexture(*cIt);
+		txt = pGraphicManager->LoadTexture(*cIt);
 		this->backGrounds.emplace_back(Layer(txt, std::vector<sf::Sprite>()));
 		pLastSpriteVec = &this->backGrounds.back().second;
 
@@ -53,7 +53,7 @@ void Parallax::SetBackgrounds(const std::vector<std::string>& paths)
 	}
 
 	this->layers_spd = 1.f / this->backGrounds.size();
-	this->lastPos = GraphicManager::GetViewPosition();
+	this->lastPos = pGraphicManager->GetViewPosition();
 };
 void Parallax::SetSizeCoefficient(float _scale)
 {
@@ -81,30 +81,48 @@ void Parallax::ResetBackground()
 		}
 	}
 
-	this->lastPos = GraphicManager::GetViewPosition();
+	this->lastPos = pGraphicManager->GetViewPosition();
+};
+
+void Parallax::Execute()
+{
+	Update();
+};
+void Parallax::DebugExecute()
+{
+	Update();
 };
 void Parallax::SelfPrint()
+{
+	Print();
+};
+void Parallax::DebugSelfPrint()
+{
+	Print();
+};
+
+void Parallax::Print()
 {
 	std::vector<Layer>::reverse_iterator rIt;
 	size_t i = 0;
 
 	for (rIt = this->backGrounds.rbegin(); rIt != this->backGrounds.rend(); rIt++)
 		for (i = 0; i < rIt->second.size(); i++)
-			GraphicManager::Draw(rIt->second[i]);
+			pGraphicManager->Draw(rIt->second[i]);
 };
-void Parallax::Execute()
+void Parallax::Update()
 {
 	std::vector<Layer>::iterator it;
 	sf::Sprite* pSprite = nullptr;
 	sf::Vector2f diff, movement;
-	sf::Vector2f viewPos(GraphicManager::GetViewPosition());
-	sf::Vector2f viewSize(GraphicManager::GetViewSize());
+	sf::Vector2f viewPos(pGraphicManager->GetViewPosition());
+	sf::Vector2f viewSize(pGraphicManager->GetViewSize());
 	float leastLim = 0.f, maxLim = 0.f, counter = 1.f;
 	unsigned int i = 0;
 
 	diff = this->lastPos - viewPos;
-	leastLim	= viewPos.x - viewSize.x;
-	maxLim		= viewPos.x + viewSize.x;
+	leastLim = viewPos.x - viewSize.x;
+	maxLim = viewPos.x + viewSize.x;
 	this->lastPos = viewPos;
 
 	/*

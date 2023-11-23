@@ -6,11 +6,14 @@ using namespace stage;
 #define ORIGIN_SIZE 1.f
 
 EventManager::DebugFlagSubject* Entity::pDebugFlagSub = EventManager::DebugFlagSubject::GetInstance();
+Stage* Entity::pStage = nullptr;
+float* Entity::maxGravity = nullptr;
+float* Entity::gravity = nullptr;
 
 Entity::Entity() :
 	Ente(Type::UNDEFINED, PrintPriority::undefined),
-	velocityCoeff(1.f),
 	isStatic(true),
+	velocityCoeff(1.f),
 	hitBox(),
 	texture(nullptr),
 	body(),
@@ -25,21 +28,22 @@ Entity::Entity() :
 	this->hitBox.setTexture(NULL);
 	this->hitBox.setFillColor(sf::Color::Transparent);
 	this->hitBox.setOutlineThickness(1.5f);
+	this->hitBox.setOutlineColor(sf::Color::Green);
 
-	this->SetPosition(0.f, 0.f);
+	this->SetPosition(sf::Vector2f(0.f, 0.f));
 
 	this->originCircle.setFillColor(sf::Color::Transparent);
 	this->originCircle.setRadius(ORIGIN_SIZE);
 	this->originCircle.setOrigin(ORIGIN_SIZE / 2.f, ORIGIN_SIZE / 2.f);
 	this->originCircle.setOutlineThickness(2.5f);
 	this->originCircle.setOutlineColor(sf::Color::Blue);
-};
-Entity::Entity(const unsigned short int _type, const unsigned short int _printPriority, const sf::Vector2f _size,
+}
+Entity::Entity(const Type _type, const PrintPriority _priority, const sf::Vector2f _size,
 	const sf::Vector2f _position, const std::string _texturePath, const sf::IntRect sheetCut,
 	const bool _isStatic, const float _scale) :
-	Ente(_type, _printPriority),
+	Ente(_type, _priority),
+	isStatic(_isStatic),
 	velocityCoeff(1.f),
-	isStatic(_isStatic), 
 	hitBox(), 
 	texture(nullptr), 
 	body(),
@@ -53,7 +57,7 @@ Entity::Entity(const unsigned short int _type, const unsigned short int _printPr
 
 	if (!_texturePath.empty())
 	{
-		this->texture = GraphicManager::LoadTexture(_texturePath, sheetCut);
+		this->texture = pGraphicManager->LoadTexture(_texturePath, sheetCut);
 
 		if (this->texture != nullptr)
 		{
@@ -75,32 +79,18 @@ Entity::Entity(const unsigned short int _type, const unsigned short int _printPr
 	this->hitBox.setPosition(_position);
 	this->hitBox.setScale(_scale, _scale);
 	this->hitBox.setOrigin(this->hitBox.getSize() / 2.f);
-	this->hitBox.setOutlineThickness(1.5f);
+	this->hitBox.setOutlineThickness(-1.5f);
+	this->hitBox.setOutlineColor(sf::Color::Green);
 
 	this->originCircle.setFillColor(sf::Color::Transparent);
 	this->originCircle.setRadius(ORIGIN_SIZE);
 	this->originCircle.setOrigin(ORIGIN_SIZE / 2.f, ORIGIN_SIZE / 2.f);
 	this->originCircle.setOutlineThickness(2.5f);
 	this->originCircle.setOutlineColor(sf::Color::Blue);
-};
+}
 Entity::~Entity()
 {
 	this->pDebugFlagSub->DettachObs(this);
-};
-
-const sf::Vector2f Entity::GetPosition() const
-{
-	return this->hitBox.getPosition();
-}
-void Entity::MovePosition(const float X_axis, const float Y_axis)
-{
-	this->hitBox.move(X_axis, Y_axis);
-	this->body.move(X_axis, Y_axis);
-}
-void Entity::SetPosition(const float X_axis, const float Y_axis)
-{
-	this->hitBox.setPosition(X_axis, Y_axis);
-	this->body.setPosition(X_axis, Y_axis);
 }
 
 void Entity::UpdateObs(const trait::Subject* alteredSub)
@@ -109,29 +99,25 @@ void Entity::UpdateObs(const trait::Subject* alteredSub)
 		return;
 
 	if(this->pDebugFlagSub->GetDebugFlag() == true)
-		this->hitBox.setOutlineColor(sf::Color::Red);
+		this->hitBox.setOutlineColor(sf::Color::Green);
 	else
 		this->hitBox.setOutlineColor(sf::Color::Transparent);
-};
-
-void Entity::Execute()
+}
+const std::list<Entity::Hitbox> Entity::GetHitBoxes()
 {
-	this->Move();
-};
-void Entity::DebugExecute()
-{
-	sf::Vector2f newPos;
+	sf::Vector2f size(this->GetSize());
+	std::list<Hitbox> hitboxes;
 
-	this->Move();
+	hitboxes.emplace_back(this->GetPosition(), size, HitboxType::BODY);
 
-	newPos = this->GetPosition();
-	this->originCircle.setPosition(newPos.x, newPos.y);
-};
+	return hitboxes;
+}
+
 void Entity::SetTexture(const std::string _texturePath, const sf::IntRect sheetCut)
 {
 	if (!_texturePath.empty())
 	{
-		this->texture = GraphicManager::LoadTexture(_texturePath, sheetCut);
+		this->texture = pGraphicManager->LoadTexture(_texturePath, sheetCut);
 
 		if (this->texture != nullptr)
 		{
@@ -144,15 +130,32 @@ void Entity::SetTexture(const std::string _texturePath, const sf::IntRect sheetC
 			);
 		}
 	}
-};
+}
+
+void Entity::Execute()
+{
+	this->Move();
+}
+void Entity::DebugExecute()
+{
+	sf::Vector2f newPos;
+
+	this->Move();
+
+	newPos = this->GetPosition();
+	this->originCircle.setPosition(newPos.x, newPos.y);
+}
+
 void Entity::Move()
 {
-	float max = Stage::GetMaxGravityPull();
-	this->velocity.y += this->velocityCoeff * elapsedTime * Stage::GetGravity();
+	if (maxGravity == nullptr || gravity == nullptr)
+		return;
+
+	this->velocity.y += this->velocityCoeff * elapsedTime * *gravity;
 
 	/*
-	if (this->velocity.y > Stage::GetMaxGravityPull())
-		this->velocity.y = Stage::GetMaxGravityPull();
+	if (this->velocity.y > *maxGravity)
+		this->velocity.y = *maxGravity;
 
 	if (this->isStatic)
 	{
@@ -161,9 +164,9 @@ void Entity::Move()
 	*/
 	// versao branchless
 	this->velocity.y = (
-		(this->velocity.y * (this->velocity.y < max && !this->isStatic)) +
-		(max * (this->velocity.y > max && !this->isStatic))
+		(this->velocity.y * (this->velocity.y < *maxGravity && !this->isStatic)) +
+		(*maxGravity * (this->velocity.y > *maxGravity && !this->isStatic))
 	);
 
-	this->MovePosition(this->velocity.x, this->velocity.y);
-};
+	this->MovePosition(this->velocity);
+}

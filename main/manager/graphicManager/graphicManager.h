@@ -1,67 +1,68 @@
 #pragma once
 
 #include "../auxiliary/traits/state/gameState/gameState.h"
+#include "../auxiliary/traits/subject/subject.h"
+#include "manager/eventManager/eventManager.h"
 
-namespace sf
+const enum PrintPriority : const unsigned short int
 {
-	typedef Rect<unsigned int> UIntRect;
-}
-namespace obstacle
-{
-	class Obstacle;
-}
-namespace character
-{
-	namespace enemy
-	{
-		class Enemy;
-	}
-}
+	undefined = 0,
+	background,
+	obstacles,
+	characters,
+	projectiles,
+	interfaces,
+	buttons
+};
+
+class Entity;
 
 namespace manager
 {
 	typedef std::unordered_map<std::string, sf::Texture*> TextureMap;
 
-	class GraphicManager
+	class GraphicManager : public trait::Observer
 	{
 	public:
 		static GraphicManager* GetInstance();
 		static void DeconsInstance();
 
-		static void SetCameraLimits(const sf::FloatRect limits) { cameraLim = limits; };
+		void SetCameraLimits(const sf::FloatRect limits) { cameraLim = limits; }
 
-		const float GetZoom() const { return this->zoom; };
-		void SetZoom(const float _zoom) { this->zoom = _zoom; };
+		const float GetZoom() const { return this->zoom; }
+		void SetZoom(const float _zoom) { this->zoom = _zoom; }
 
-		static const sf::FloatRect GetViewBounds()
+		const sf::FloatRect GetViewBounds()
 		{
+			sf::Vector2f center(view.getCenter());
+			sf::Vector2f size(view.getSize() / 2.f);
 			return sf::FloatRect(
-				view.getCenter().x - (view.getSize().x / 2.f),
-				view.getCenter().y - (view.getSize().y / 2.f),
-				view.getCenter().x + (view.getSize().x / 2.f),
-				view.getCenter().y + (view.getSize().y / 2.f)
+				center.x - size.x,
+				center.y - size.y,
+				center.x + size.x,
+				center.y + size.y
 			);
-		};
-		static const sf::Vector2f GetViewPosition()	{ return view.getCenter(); };
-		static const sf::Vector2f GetViewSize()	{ return view.getSize(); };
+		}
+		const sf::Vector2f GetViewPosition() { return view.getCenter(); }
+		const sf::Vector2f GetViewSize() { return view.getSize(); }
 
-		static const bool IsWindowOpen() { return window->isOpen(); };
-		static void CloseWindow() { window->close(); };
-		static sf::RenderWindow& GetWindow() { return *window; };
+		sf::RenderWindow& GetWindow() { return window; }
+		const bool IsWindowOpen() { return window.isOpen(); }
+		void CloseWindow() { window.close(); }
 
-		static const sf::Vector2f MouseToView()
+		const sf::Vector2f MouseToView()
 		{
-			return window->mapPixelToCoords(sf::Mouse::getPosition(*window));
-		};
-		static const sf::Vector2i MouseToGrid()
+			return window.mapPixelToCoords(sf::Mouse::getPosition(window));
+		}
+		const sf::Vector2i MouseToGrid()
 		{
-			sf::Vector2f mousToView = window->mapPixelToCoords(sf::Mouse::getPosition(*window));
+			sf::Vector2f mousToView = window.mapPixelToCoords(sf::Mouse::getPosition(window));
 			return sf::Vector2i(
 				int(mousToView.x / gridScale.x),
 				int(mousToView.y / gridScale.y)
 			);
-		};
-		static const sf::UIntRect GridIndexsToCamera()
+		}
+		const sf::UIntRect GridIndexsToCamera()
 		{
 			sf::FloatRect bounds(GraphicManager::GetViewBounds());
 			sf::Vector2f grid = gridScale;
@@ -74,8 +75,8 @@ namespace manager
 			);
 
 			return indexs;
-		};
-		const void SetGameState(trait::GameState* _state) { this->pState = _state; };
+		}
+		const void SetGameState(trait::GameState* _state) { this->pState = _state; }
 
 		void SetResizeDistortion(const bool X_axis, const bool Y_axis)
 		{
@@ -86,7 +87,7 @@ namespace manager
 			this->distort_y = Y_axis;
 			if (!this->distort_y && this->bar_y)
 				this->bar_y = false;
-		};
+		}
 		void SetResizeBar(const bool X_axis, const bool Y_axis)
 		{
 			this->bar_x = X_axis;
@@ -96,23 +97,24 @@ namespace manager
 			this->bar_y = Y_axis;
 			if (this->bar_y && !this->distort_y)
 				this->distort_y = true;
-		};
+		}
 
-		static void SetGridScale(const sf::Vector2f _scale) { gridScale = _scale; };
+		void SetGridScale(const sf::Vector2f _scale) { gridScale = _scale; }
 
-		static void UpdateCamera();
-		void WindowResize() const;
+		const sf::Font* GetFont() { return &font; };
 
-		static void Draw(const sf::RectangleShape& drawTarget);
-		static void Draw(const sf::CircleShape& drawTarget);
-		static void Draw(const sf::Sprite& drawTarget);
-		static void Draw(const sf::Text& drawTarget);
+		void UpdateObs(const trait::Subject* alteredSub);
 
-		static const std::list<obstacle::Obstacle*> GetCameraEntities(const std::list<obstacle::Obstacle*>& entities);
-		static const std::list<character::enemy::Enemy*> GetCameraEntities(const std::vector<character::enemy::Enemy*>& entities);
+		void UpdateCamera();
+		void WindowResize();
 
-		static sf::Font* GetFont() { return font; };
-		static sf::Texture* LoadTexture(std::string texturePath, sf::IntRect sheetCut = sf::IntRect(0, 0, 0, 0), bool repeated = false);
+		const std::list<Entity*> GetCameraEntities(const std::list<Entity*>& entities);
+		sf::Texture* LoadTexture(std::string texturePath, sf::IntRect sheetCut = sf::IntRect(0, 0, 0, 0), bool repeated = false);
+
+		void Draw(const sf::RectangleShape& drawTarget);
+		void Draw(const sf::CircleShape& drawTarget);
+		void Draw(const sf::Sprite& drawTarget);
+		void Draw(const sf::Text& drawTarget);
 
 		void Update();
 
@@ -121,21 +123,22 @@ namespace manager
 		~GraphicManager();
 
 	private:
-		static const float cameraExtraSpace;
-		static trait::GameState* pState;
 		static GraphicManager* instance;
-		static TextureMap* textures;
-		static sf::Font* font;
-		static sf::RenderWindow* window;
-		static sf::FloatRect cameraLim;
-		static sf::View view;
-		static sf::Vector2f gridScale;
 
+		manager::EventManager::DebugFlagSubject* pDebugSubjectFlag;
 		const sf::Vector2f originalSize;
+		trait::GameState* pState;
+		TextureMap textures;
+
+		sf::RenderWindow window;
+		sf::FloatRect cameraLim;
+		sf::Vector2f gridScale;
+		sf::Font font;
+		sf::View view;
 
 		float zoom;
 		bool distort_x, distort_y;
 		bool bar_x, bar_y;
-
+		bool flagState;
 	};
 }

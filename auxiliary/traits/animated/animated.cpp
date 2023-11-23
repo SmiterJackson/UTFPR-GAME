@@ -14,7 +14,7 @@ Animated::Animation::Animation():
 	repeatable(true)
 {};
 Animated::Animation::Animation(int _start, int _end, int _row, sf::Vector2i size, 
-	float animSwitchTime, bool repeatable, OffSet _offSet) :
+	float animSwitchTime, bool repeatable, sf::Vector2f _offSet) :
 	sheet_token(sf::Vector2i(0, 0), size),
 	offSet(_offSet),
 	start(_start), 
@@ -26,7 +26,7 @@ Animated::Animation::Animation(int _start, int _end, int _row, sf::Vector2i size
 	repeatable(repeatable)
 {};
 Animated::Animation::Animation(int _start, int _end, int _row, int width, int height, 
-	float animSwitchTime, bool repeatable, OffSet _offSet) :
+	float animSwitchTime, bool repeatable, sf::Vector2f _offSet) :
 	sheet_token(0, 0, width, height),
 	offSet(_offSet),
 	start(_start),
@@ -51,6 +51,7 @@ void Animated::Animation::Update(sf::Sprite& _bodyRef, sf::RectangleShape& _hitB
 		return;
 
 	sf::IntRect token;
+	sf::Vector2f off;
 	this->timeAcumulator += pElapsed_time;
 
 	if (this->timeAcumulator >= this->switchTime)
@@ -67,29 +68,28 @@ void Animated::Animation::Update(sf::Sprite& _bodyRef, sf::RectangleShape& _hitB
 			this->current++;
 	}
 
-	if (this->offSet.left != 0.f)
-		bool sexo = true;
-
-	token.top = this->row * this->sheet_token.height + this->offSet.top;
-	token.height = this->sheet_token.height - this->offSet.top - this->offSet.bottom;
-
-	if (right)
+	token.top = this->row * this->sheet_token.height;
+	token.height = this->sheet_token.height;
+	
+	/*if (right)
 	{
-		token.left = this->current * this->sheet_token.width + this->offSet.left;
-		token.width = this->sheet_token.width - this->offSet.left - this->offSet.right;
-
-		_bodyRef.setTextureRect(token);/*
-		_bodyRef.setOrigin(offSet.origin);
-		_bodyRef.setPosition(_hitBoxRef.getPosition());*/
-		return;
+		token.left = this->current * this->sheet_token.width;
+		token.width = this->sheet_token.width;
 	}
+	else
+	{
+		token.left = (this->current + 1) * this->sheet_token.width;
+		token.width = -this->sheet_token.width;
+	}*/
+	token.left = (this->current + !right) * this->sheet_token.width;
+	token.width = this->sheet_token.width * (1 - (2 * !right));
 
-	token.left = (this->current + 1) * this->sheet_token.width - this->offSet.right;
-	token.width = -(this->sheet_token.width - this->offSet.left - this->offSet.right);
+	off = this->offSet * sf::Vector2i((1 - (2 * right)), 1);
+	off += sf::Vector2i(sheet_token.width, sheet_token.height) / 2.f;
 
-	_bodyRef.setTextureRect(token);/*
-	_bodyRef.setOrigin(offSet.origin);
-	_bodyRef.setPosition(_hitBoxRef.getPosition());*/
+	_bodyRef.setTextureRect(token);
+	_bodyRef.setOrigin(off);
+	_bodyRef.setPosition(_hitBoxRef.getPosition());
 };
 
 

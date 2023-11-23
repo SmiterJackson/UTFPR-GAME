@@ -10,41 +10,22 @@ namespace trait
 		class Animation
 		{
 		public:
-			struct OffSet
-			{
-				OffSet(int _left = 0, int _top = 0, int _right = 0, int _bottom = 0, 
-						sf::Vector2f _origin = sf::Vector2f(0.f, 0.f)):
-					left(_left),
-					top(_top),
-					right(_right),
-					bottom(_bottom),
-					origin(_origin)
-				{};
-
-				int left	= 0;
-				int top		= 0;
-				int right	= 0;
-				int bottom	= 0;
-
-				const sf::Vector2f origin = sf::Vector2f(0.f, 0.f);
-			};
-
-		public:
 			Animation();
 			Animation(int _start, int _end, int _row, sf::Vector2i size, 
-				float animSwitchTime, bool repeatable = false, OffSet _offSet = OffSet());
+				float animSwitchTime, bool repeatable = false, sf::Vector2f _offSet = sf::Vector2f(0.f, 0.f));
 			Animation(int _start, int _end, int _row, int width, int height, 
-				float animSwitchTime, bool repeatable = false, OffSet _offSet = OffSet());
+				float animSwitchTime, bool repeatable = false, sf::Vector2f _offSet = sf::Vector2f(0.f, 0.f));
 			~Animation();
 
-			float GetDuration() { return this->switchTime * (this->end - this->start + 1); };
+			const float GetDuration() const { return this->switchTime * (this->end - this->start + 1); };
+			const int GetCurrent() const { return this->current; };
 
 			void ResetAnimation();
 			void Update(sf::Sprite& _bodyRef, sf::RectangleShape& _hitBoxRef, const float& pElapsed_time, bool right = true);
 
 		private:
 			const sf::IntRect sheet_token;
-			const OffSet offSet;
+			const sf::Vector2f offSet;
 
 			int start, end, row, current;
 			float timeAcumulator, switchTime;

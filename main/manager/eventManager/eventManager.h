@@ -4,6 +4,8 @@
 
 namespace manager
 {
+	class GraphicManager;
+
 	class EventManager : public trait::Observer
 	{
 	public:
@@ -49,7 +51,6 @@ namespace manager
 		static void DeconsInstance();
 
 		void UpdateObs(const trait::Subject* alteredSub);
-
 		void Update();
 
 	private:
@@ -59,6 +60,7 @@ namespace manager
 	private:
 		static EventManager* instance;
 
+		GraphicManager* pGraphicManager;
 		DebugFlagSubject* pDebugFlagSub;
 		InputSubject* pInputSubject;
 	};

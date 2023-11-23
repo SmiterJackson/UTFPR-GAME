@@ -18,9 +18,6 @@ namespace stage
 		Stage(const sf::Vector2u gridSize, const std::vector<std::string> backgroundPaths, const float scale = 1.f);
 		virtual ~Stage();
 
-		static float GetGravity() { return gravity; };
-		static float GetMaxGravityPull() { return maxGravityPull; };
-
 		const sf::Vector2f GetWorldSize() 
 		{ 
 			sf::Vector2f size(bounds.getSize());
@@ -44,6 +41,8 @@ namespace stage
 			);
 		};
 
+		void Despawn(const unsigned long long int& id) { this->RemoveEntity(id); }
+
 		virtual void UpdateObs(const trait::Subject* alteredSub);
 
 		virtual void Execute();
@@ -64,15 +63,16 @@ namespace stage
 
 		void EntityCreated(Entity* pEntity);
 		void RemoveEntity(unsigned long long int id); 
-		void RemoveEntity(const std::vector<unsigned long long int>& ids);
+		void RemoveEntity(const std::list<unsigned long long int>& ids);
 
 	protected:
-		static float gravity;
-		static float maxGravityPull;
 		static manager::EventManager::InputSubject* pInputSub;
 		static sf::Vector2f gridScale;
 		static GridBlock gridBlock;
 		static Grid grid;
+
+		static float gravity;
+		static float maxGravityPull;
 
 		bool showGrid;
 		bool mousePressed;

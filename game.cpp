@@ -27,7 +27,9 @@ void Game::DeconsInstance()
 
 Game::Game():
     pEventManager(EventManager::GetInstance()),
-    pGraphicManager(GraphicManager::GetInstance())
+    pGraphicManager(GraphicManager::GetInstance()),
+    pDebugSubjectFlag(EventManager::DebugFlagSubject::GetInstance()),
+    flagState(false)
 {
     trait::GameState::SetOwner(this);
 
@@ -35,9 +37,21 @@ Game::Game():
 
     if(this->pGraphicManager != nullptr)
         this->pGraphicManager->SetGameState(this->pState);
+
+    pDebugSubjectFlag->AttachObs(this);
 };
 Game::~Game()
-{};
+{
+    pDebugSubjectFlag->DettachObs(this);
+};
+
+void Game::UpdateObs(const Subject* alteredSub) 
+{
+    if (alteredSub == nullptr || alteredSub != pDebugSubjectFlag)
+        return;
+
+    flagState = pDebugSubjectFlag->GetDebugFlag();
+}
 
 void Game::MainMenu()
 {
@@ -59,12 +73,15 @@ void Game::Execute()
     {
         this->elapsedTime = clock.restart().asSeconds();
         // normaliza o tempo elapsado para um dado limite (aproximadamente 30 fps)
-        if (this->elapsedTime >= (1.f / 30.f))
-            this->elapsedTime = (1.f / 30.f);
+        if (this->elapsedTime >= (1.f / 60.f))
+            this->elapsedTime = (1.f / 60.f);
 
         this->pEventManager->Update();
 
-        this->pState->Execute();
+        if (!flagState)
+            this->pState->Execute();
+        else
+            this->pState->DebugExecute();
 
         this->pGraphicManager->Update();
     }

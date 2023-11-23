@@ -10,13 +10,13 @@ namespace auxiliary
 	{
 	public:
 		MyList() :
-			first(nullptr), last(nullptr), size(0ULL)
+			first(nullptr), last(nullptr), size(0U)
 		{};
 		MyList(const MyList<T>& _other) :
-			first(nullptr), last(nullptr), size(0ULL)
+			first(nullptr), last(nullptr), size(0U)
 		{
-			unsigned int i = 0U;
-			for (i = 0U; i < _other.size; i++)
+			unsigned int i = 0U, size = _other.size;
+			for (i = 0U; i < size; i++)
 				this->PushBack(_other[i]->GetInfo());
 		};
 		~MyList()
@@ -36,40 +36,41 @@ namespace auxiliary
 		class Iterator : public AbstractIterator<T>
 		{
 		public:
-			Iterator() :
-				AbstractIterator<T>(),
-				start(nullptr),
-				pElement(nullptr)
-			{};
-				Iterator(ListElement<T>* _start) :
-				AbstractIterator<T>(),
+			Iterator(ListElement<T>* _start = nullptr, const unsigned int position = 0, const bool _started = false) :
+				AbstractIterator<T>(position),
 				start(_start),
-				pElement(_start)
+				pElement(_start),
+				startPosition(position),
+				started(_started)
 			{};
 			virtual ~Iterator()
 			{};
 
-			unsigned int& ListPosition() { return this->listPosition; };
-
-			void First()
+			void Restart()
 			{
 				this->pElement = this->start;
+				this->listPosition = this->startPosition;
+				this->started = false;
 			};
 			virtual void Next()
 			{
-				if (this->pElement != nullptr)
-					if (this->pElement->GetNext() != nullptr)
-						this->pElement = this->pElement->GetNext();
-			};
-			virtual void Previous()
-			{
-				if (this->pElement != nullptr)
-					if (this->pElement->GetPrevious() != nullptr)
-						this->pElement = this->pElement->GetPrevious();
+				if (this->pElement == nullptr)
+				{
+					std::cout << "Elemento nulo de lista, lista vazia." << std::endl;
+					return;
+				}
+				else if (this->pElement->GetNext() == nullptr)
+					return;
+
+				this->pElement = this->pElement->GetNext();
+				this->listPosition++;
+
+				if (!this->started)
+					this->started = true;
 			};
 			virtual bool Ended()
 			{
-				return (this->pElement->GetNext() == this->start);
+				return (this->pElement == this->start);
 			};
 			T& Current()
 			{
@@ -84,14 +85,16 @@ namespace auxiliary
 			{
 				this->start = _other.start;
 				this->pElement = _other.pElement;
+				this->startPosition = _other.startPosition;
+				this->started = _other.started;
 			};
 			bool operator== (const Iterator& _other)
 			{
-				return (this->pElement == _other.pElement);
+				return (this->pElement == _other.pElement) && (this->start && _other.started);
 			};
 			bool operator!= (const Iterator& _other)
 			{
-				return (this->pElement != _other.pElement);
+				return (this->pElement != _other.pElement) || (this->started != _other.started);
 			};
 
 			T& operator* ()
@@ -106,69 +109,57 @@ namespace auxiliary
 			Iterator& operator++ ()
 			{
 				this->Next();
-				this->listPosition++;
 				return (*this);
 			}
 			Iterator& operator++ (int val)
 			{
 				this->Next();
-				this->listPosition++;
-				return (*this);
-			}
-			Iterator& operator-- ()
-			{
-				this->Previous();
-				this->listPosition--;
-				return (*this);
-			}
-			Iterator& operator-- (int val)
-			{
-				this->Previous();
-				this->listPosition--;
 				return (*this);
 			}
 
 		protected:
 			ListElement<T>* start;
 			ListElement<T>* pElement;
+
+			unsigned int startPosition;
+			bool started;
 		};
 		class ReverseIterator : public Iterator
 		{
 		public:
-			ReverseIterator() :
-				Iterator()
-			{};
-			ReverseIterator(ListElement<T>* _start) :
-				Iterator(_start)
+			ReverseIterator(const ListElement<T>& _start, unsigned int position = 0) :
+				Iterator(_start, position)
 			{};
 			~ReverseIterator()
 			{};
 
 			void Next()
 			{
-				if (this->pElement != nullptr)
-					if (this->pElement->GetPrevious() != nullptr)
-						this->pElement = this->pElement->GetPrevious();
-			};
-			void Previous()
-			{
-				if (this->pElement != nullptr)
-					if (this->pElement->GetNext() != nullptr)
-						this->pElement = this->pElement->GetNext();
+				if (this->pElement == nullptr)
+				{
+					std::cout << "Elemento nulo de lista, lista vazia." << std::endl;
+					return;
+				}
+				else if (this->pElement->GetPrevious() == nullptr)
+					return;
+
+				this->pElement = this->pElement->GetPrevious();
+				this->listPosition--;
 			};
 			bool Ended()
 			{
-				return (this->pElement->GetPrevious() == this->start);
+				auto aux = this->pElement->GetPrevious();
+				return (aux == nullptr || aux == this->start);
 			};
 		};
 
-		void const PushBack(const T& item)
+		void const PushBack(T& item)
 		{
-			ListElement<T>* aux = new ListElement<T>(&item, this->last, this->first);
+			ListElement<T>* aux = new ListElement<T>(item, this->last, this->first);
 
 			if (aux == nullptr)
 			{
-				std::cerr << "N�o foi poss�vel alocar um novo elemento para a lista: MyList." << std::endl;
+				std::cerr << "Não foi possível alocar um novo elemento para a lista: MyList." << std::endl;
 				return;
 			}
 
@@ -195,49 +186,40 @@ namespace auxiliary
 				aux = this->last->GetPrevious();
 
 				if (aux != nullptr)
-					aux->SetNext(nullptr);
+					aux->SetNext(first);
 
 				delete this->last;
 				this->last = aux;
-
 				this->size--;
 			}
 		};
 		void PopAt(const unsigned int val)
 		{
-			unsigned int i = 0ULL;
+			unsigned int i = 0U;
 			ListElement<T>* aux = this->first;
 
-			if(val >= this->size)
+			if(val >= this->size || aux == nullptr)
 			{
-				std::cerr << "O valor dado excede tamanho da lista: MyList::PopAt(const unsigned long long int val)." << std::endl;
+				std::cerr << "O valor dado excede tamanho da lista ou a lista é nula: MyList::PopAt(const unsigned int val)." << std::endl;
 				return;
 			}
 
-			for (i = 0ULL; i < val; i++)
+			for (i = 0U; i < val; i++)
 			{
+				aux = aux->GetNext();
+
 				if (aux == nullptr)
 				{
-					std::cerr << "Não foi possível remover elemento da lista: MyList::PopAt(const unsigned long long int val)." << std::endl;
+					std::cerr << "Não foi possível remover elemento da lista: MyList::PopAt(const unsigned int val)." << std::endl;
 					return;
 				}
-				aux = aux->GetNext();
 			}
 
-			if (aux != nullptr)
-			{
-				if (aux->GetPrevious() != nullptr)
-					aux->GetPrevious()->SetNext(aux->GetNext());
+			if (aux == this->last && aux->GetPrevious() != nullptr)
+				this->last = aux->GetPrevious();
 
-				if (aux->GetNext() != nullptr)
-					aux->GetNext()->SetPrevious(aux->GetPrevious());
-
-				if (aux == this->last && aux->GetPrevious() != nullptr)
-					this->last = aux->GetPrevious();
-
-				if (aux == this->first && aux->GetNext() != nullptr)
-					this->first = aux->GetNext();
-			}
+			if (aux == this->first && aux->GetNext() != nullptr)
+				this->first = aux->GetNext();
 
 			delete aux;
 			this->size--;
@@ -254,12 +236,6 @@ namespace auxiliary
 			}
 			it++;
 
-			if (aux->GetPrevious() != nullptr)
-				aux->GetPrevious()->SetNext(aux->GetNext());
-
-			if (aux->GetNext() != nullptr)
-				aux->GetNext()->SetPrevious(aux->GetPrevious());
-
 			if (aux == this->last && aux->GetPrevious() != nullptr)
 				this->last = aux->GetPrevious();
 
@@ -273,36 +249,40 @@ namespace auxiliary
 		ListElement<T>* const GetFirst() { return this->first; };
 		ListElement<T>* const GetLast() { return this->last; };
 
-		Iterator begin()	{ return Iterator(this->first); };
-		Iterator end()		{ return Iterator(this->last); };
-		Iterator rbegin()	{ return ReverseIterator(this->last); };
-		Iterator rend()		{ return ReverseIterator(this->first); };
+		Iterator begin()	{ return Iterator(this->first, 0U); };
+		Iterator end()		{ return Iterator(this->first, 0U, true); };
+		Iterator rbegin()	{ return ReverseIterator(this->last, size); };
+		Iterator rend()		{ return ReverseIterator(this->last, size, true); };
 
 		unsigned int Size() { return this->size; };
 
-		ListElement<T>* operator[] (unsigned int val) const
+		ListElement<T>* operator[] (const unsigned int val) const
 		{
-			unsigned int i = 0ULL;
+			unsigned int i = 0U;
 			ListElement<T>* aux = this->first;
 
-			if (aux == nullptr || val > this->size)
+			if (aux == nullptr || val >= this->size)
 			{
-				std::cerr << "A lista n�o cont�m elementos para iterar ou o valor " <<
-					"requerido excede o n�mero de elementos, total(" << this->size << "): MyList::operator[]." << std::endl;
+				std::cerr << "A lista é nula ou o valor requerido excede o número de elementos, total("
+					<< this->size << "): MyList::operator[]." << std::endl;
 				return nullptr;
 			}
 
-			for (i = 0ULL; i < val; i++)
+			for (i = 0U; i < val; i++)
+			{
+				if (aux == nullptr)
+					break;
+
 				aux = aux->GetNext();
+			}
 
 			return aux;
 		}
 		MyList<T>& operator+= (const MyList<T>& _other)
 		{
-			Iterator it;
-
-			for (it = _other.begin(); it != _other.end(); it++)
-				this->PushBack(*it);
+			unsigned int i = 0U, size = _other.size;
+			for (i = 0U; i < size; i++)
+				this->PushBack(_other[i]->GetInfo());
 
 			return *this;
 		}

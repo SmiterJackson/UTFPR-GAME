@@ -15,7 +15,7 @@ namespace character
 			typedef std::vector<std::pair<sf::RectangleShape, sf::Text>> GridLine;
 			typedef std::vector<GridLine> GridBlock;
 
-			enum A_STAR_RETURN_TYPE : unsigned short int
+			enum DIRECTION : unsigned short int
 			{
 				ERROR = 0,
 				UP,
@@ -31,23 +31,24 @@ namespace character
 		public:
 			Enemy();
 			Enemy(const sf::Vector2f _size, const sf::Vector2f _tokenSize, const std::string _texturePath,
-				const AnimationSheet _animations = AnimationSheet(), const unsigned int _lifeAmount = 0U,
-				const float _invcDuration = 0.f, const float _deathTime = 1.f, const float _agroRange = 1.f,
+				const AnimationSheet _animations = AnimationSheet(), const short int _lifeAmount = 0U,
+				const float _invcDuration = 0.f, const float _agroRange = 1.f,
 				const bool _isStatic = true, const float _scale = 1.0f);
 			virtual ~Enemy();
 
-			virtual void UpdateObs(const trait::Subject* alteredSub);
+			static void ShowGrid(bool show) { showAStar = show; }
+			static bool GridState() { return showAStar; }
+
 			virtual void UpdateTarget();
 
 			virtual void EntityColision(Entity* _other, const sf::Vector2f& intersection) = 0;
 			virtual void MapColision(const sf::Vector2f& intersection) = 0;
 
-			virtual sf::RectangleShape GetAttackHitBox() = 0;
-
 		protected:
 			virtual void Attack() = 0;
-			virtual void Died() = 0;
-			static A_STAR_RETURN_TYPE AStarAlgorithm(const sf::Vector2i srcGridPos, const sf::Vector2i trgGridPos);
+			virtual void Dead() = 0;
+
+			static DIRECTION AStarAlgorithm(const sf::Vector2i srcGridPos, const sf::Vector2i trgGridPos);
 			static void tracePath(auxiliary::Node& trg);
 
 		protected:
@@ -58,9 +59,11 @@ namespace character
 
 			static bool showAStar;
 
-			bool agroing;
-			float agroRange;
 			Player* target;
+
+			float agroRange;
+
+			bool agroing;
 		};
 	}
 }

@@ -12,7 +12,7 @@ namespace trait
 
 		virtual void Execute() = 0;
 
-		const unsigned short int GetState() { return this->state; };
+		const unsigned short int GetState() { return this->state; }
 
 	protected:
 		unsigned short int state;

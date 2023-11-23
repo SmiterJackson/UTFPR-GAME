@@ -1,21 +1,24 @@
 #include "stage.h"
 #include "ente/entity/obstacle/tile/tile.h"
 #include "manager/graphicManager/graphicManager.h"
+using namespace character;
 using namespace auxiliary;
 using namespace obstacle;
 using namespace manager;
+using namespace enemy;
 using namespace stage;
 using namespace GUI;
 
 #define GRID_SCALE sf::Vector2f(32.f, 32.f)
 #define CAM_LIMIT_SCALE 1.0f
 
-float						Stage::gravity			= 10.f;
-float						Stage::maxGravityPull	= 6.5f;
 EventManager::InputSubject* Stage::pInputSub		= EventManager::InputSubject::GetInstance();
 sf::Vector2f				Stage::gridScale		= GRID_SCALE;
 Stage::GridBlock			Stage::gridBlock		= Stage::GridBlock();
 Stage::Grid					Stage::grid				= Stage::Grid();
+
+float						Stage::gravity = 10.f;
+float						Stage::maxGravityPull = 6.5f;
 
 Stage::Stage():
 	Ente(),
@@ -29,11 +32,14 @@ Stage::Stage():
 	enemies(),
 	bounds()
 {
-	GraphicManager::SetCameraLimits(sf::FloatRect(0.f, 0.f, 0.f, 0.f));
+	pGraphicManager->SetCameraLimits(sf::FloatRect(0.f, 0.f, 0.f, 0.f));
 
 	ColisionManager::SetOwner(this);
+	Entity::SetMaxGravity(&this->maxGravityPull);
+	Entity::SetGravity(&this->gravity);
+	Entity::SetStage(this);
 
-	GraphicManager::UpdateCamera();
+	pGraphicManager->UpdateCamera();
 	this->background.ResetBackground();
 
 	if(pInputSub != nullptr)
@@ -64,10 +70,10 @@ Stage::Stage(const sf::Vector2u gridSize, const std::vector<std::string> backgro
 	this->bounds.setOrigin(size / 2.f);
 	this->bounds.setPosition(size / 2.f);
 	this->bounds.setFillColor(sf::Color::Transparent);
-	this->bounds.setOutlineThickness(1.5f);
-	this->bounds.setOutlineColor(sf::Color::Red);
+	this->bounds.setOutlineThickness(-0.5f);
+	this->bounds.setOutlineColor(sf::Color::Cyan);
 
-	txt.setFont(*GraphicManager::GetFont());
+	txt.setFont(*(pGraphicManager->GetFont()));
 	txt.setCharacterSize(10);
 	baseShape.setSize(gridScale);
 	baseShape.setFillColor(sf::Color(0U, 0U, 255U, 100U));
@@ -115,17 +121,20 @@ Stage::Stage(const sf::Vector2u gridSize, const std::vector<std::string> backgro
 						grid[x][y].neighbours.push_back(&grid[j][h]);
 		}
 
-	GraphicManager::SetCameraLimits(sf::FloatRect(
+	pGraphicManager->SetCameraLimits(sf::FloatRect(
 		-size.x * (CAM_LIMIT_SCALE - 1.f),
 		-size.y * (CAM_LIMIT_SCALE - 1.f),
 		 size.x * CAM_LIMIT_SCALE,
 		 size.y * CAM_LIMIT_SCALE)
 	);
-	GraphicManager::SetGridScale(gridScale);
+	pGraphicManager->SetGridScale(gridScale);
 
 	ColisionManager::SetOwner(this);
+	Entity::SetMaxGravity(&this->maxGravityPull);
+	Entity::SetGravity(&this->gravity);
+	Entity::SetStage(this);
 
-	GraphicManager::UpdateCamera();
+	pGraphicManager->UpdateCamera();
 	this->background.ResetBackground();
 	if (pInputSub != nullptr)
 		this->pInputSub->AttachObs(this);
@@ -163,11 +172,20 @@ void Stage::UpdateObs(const trait::Subject* alteredSub)
 
 	if (_event.type == sf::Event::EventType::KeyPressed)
 	{
+		if (_event.key.code == sf::Keyboard::Equal && ctrl_pressed && shift_pressed)
+			this->AddPlayer();
+
+		if (_event.key.code == sf::Keyboard::Dash && ctrl_pressed && shift_pressed)
+			this->RemovePlayer();
+
 		if (_event.key.code == sf::Keyboard::G && ctrl_pressed && shift_pressed)
 			showGrid = !showGrid;
 
 		if (_event.key.code == sf::Keyboard::O && ctrl_pressed && shift_pressed)
 			OrganizeObstacles();
+
+		if (_event.key.code == sf::Keyboard::P && ctrl_pressed && shift_pressed)
+			Enemy::ShowGrid(!Enemy::GridState());
 
 		if (showGrid)
 		{
@@ -190,7 +208,7 @@ void Stage::UpdateObs(const trait::Subject* alteredSub)
 		if (_event.type == sf::Event::MouseButtonPressed && 
 		   (_event.mouseButton.button == sf::Mouse::Left || _event.mouseButton.button == sf::Mouse::Right))
 		{
-			auto index = GraphicManager::MouseToGrid();
+			auto index = pGraphicManager->MouseToGrid();
 			track.second.first = index;
 			track.second.second = index;
 			track.first.setSize(gridScale);
@@ -237,7 +255,7 @@ void Stage::UpdateObs(const trait::Subject* alteredSub)
 		}
 		else if (mousePressed)
 		{
-			track.second.second = GraphicManager::MouseToGrid();
+			track.second.second = pGraphicManager->MouseToGrid();
 			sf::Vector2i delta(
 				track.second.second.x - track.second.first.x,
 				track.second.second.y - track.second.first.y
@@ -260,7 +278,7 @@ void Stage::Execute()
 {
 	unsigned int i = 0;
 
-	for (i = 0; i < this->entities.GetSize(); i++)
+	for (i = 0; i < this->entities.Size(); i++)
 	{
 		this->entities[i]->Execute();
 	}
@@ -269,14 +287,14 @@ void Stage::Execute()
 	for (character::enemy::Enemy* en : enemies)
 		en->UpdateTarget();
 
-	GraphicManager::UpdateCamera();
+	pGraphicManager->UpdateCamera();
 	this->background.Execute();
 };
 void Stage::DebugExecute()
 {
 	unsigned int i = 0;
 
-	for (i = 0; i < this->entities.GetSize(); i++)
+	for (i = 0; i < this->entities.Size(); i++)
 	{
 		this->entities[i]->DebugExecute();
 	}
@@ -285,7 +303,7 @@ void Stage::DebugExecute()
 	for (character::enemy::Enemy* en : enemies)
 		en->UpdateTarget();
 
-	GraphicManager::UpdateCamera();
+	pGraphicManager->UpdateCamera();
 	this->background.Execute();
 };
 void Stage::SelfPrint()
@@ -293,7 +311,7 @@ void Stage::SelfPrint()
 	unsigned int i = 0;
 
 	this->background.SelfPrint();
-	for(i = 0; i < this->entities.GetSize(); i++)
+	for(i = 0; i < this->entities.Size(); i++)
 	{
 		this->entities[i]->SelfPrint();
 	}
@@ -301,36 +319,35 @@ void Stage::SelfPrint()
 void Stage::DebugSelfPrint()
 {
 	unsigned int i = 0, j = 0, x = 0;
-	sf::UIntRect bounds(GraphicManager::GridIndexsToCamera());
+	sf::UIntRect bounds(pGraphicManager->GridIndexsToCamera());
 
 	this->background.SelfPrint();
-	for (i = 0; i < this->entities.GetSize(); i++)
+	for (i = 0; i < this->entities.Size(); i++)
 	{
 		this->entities[i]->DebugSelfPrint();
 	}
-	GraphicManager::Draw(this->bounds);
+	pGraphicManager->Draw(this->bounds);
 	
 	for(j = bounds.left; j < bounds.width && j < this->grid.size(); j++)
 		for (x = bounds.top; x < bounds.height && x < this->grid[j].size(); x++)
 		{
-			GraphicManager::Draw(gridBlock[j][x].first);
-			GraphicManager::Draw(gridBlock[j][x].second);
+			pGraphicManager->Draw(gridBlock[j][x].first);
+			if(showGrid)
+				pGraphicManager->Draw(gridBlock[j][x].second);
 		}
 
-	GraphicManager::Draw(this->track.first);
+	pGraphicManager->Draw(this->track.first);
 };
 
 void Stage::OrganizeObstacles() 
 {
-	if (grid.size() < 1)
-		return;
-	if (grid[0].size() < 1)
+	if (grid.size() < 1 || grid[0].size() < 1)
 		return;
 
 	std::vector<std::vector<Obstacle::ObsType>> obsTxtType;
-	std::vector<unsigned long long int> ids;
-	sf::IntRect range(0, 0, grid.size(), grid[0].size());
-	std::list<sf::Vector2i> ignoreList;
+	sf::UIntRect range(0, 0, grid.size(), grid[0].size());
+	std::list<unsigned long long int> ids;
+	std::list<sf::Vector2u> ignoreList;
 
 	sf::Vector2f pos(0.f, 0.f);
 	sf::Vector2u size(0, 0);
@@ -338,15 +355,15 @@ void Stage::OrganizeObstacles()
 	bool up = false, down = false, left = false, right = false;
 	bool lUp = false, rUp = false, lDown = false, rDown = false;
 
-	int i = 0, j = 0, h = 0, k = 0, x = 0, y = 0;
-	int counter = 0;
+	unsigned int i = 0, j = 0, h = 0, k = 0, x = 0, y = 0;
+	unsigned int counter = 0;
 
-	ids.reserve(this->entities.GetSize());
-	for (unsigned int aux = 0; aux < this->entities.GetSize(); aux++)
+	for (unsigned int aux = 0; aux < this->entities.Size(); aux++)
 		if (this->entities[aux]->GetType() == Type::OBSTACLE)
 			ids.push_back(this->entities[aux]->GetId());
 	
-	this->RemoveEntity(ids);
+	if(ids.size() > 0)
+		this->RemoveEntity(ids);
 
 	for (i = range.left; i < range.width; i++)
 	{
@@ -354,14 +371,14 @@ void Stage::OrganizeObstacles()
 		{
 			// Elimina nodos que não mais seram analisados
 			ignoreList.remove_if(
-				[&](const sf::Vector2i& val) -> bool
+				[&](const sf::Vector2u& val) -> bool
 				{
 					return val.x < i || (val.x == i && val.y < j);
 				}
 			);
 
 			// Ignora nodo caso já tenha sido coberto como um obstáculo
-			for (sf::Vector2i& vec : ignoreList)
+			for (sf::Vector2u& vec : ignoreList)
 				if (vec.x == i && vec.y == j)
 					goto OFF_MAJOR;
 
@@ -372,39 +389,41 @@ void Stage::OrganizeObstacles()
 				x = i;
 				y = j;
 
-				// verifica alcance do possível obstáculo no eixo X
+				// verifica alcance do obstáculo no eixo X
 				while (x < range.width && grid[x][j].obstacle)
 					x++;
 				range.width = x;
 
-				// verifica alcance do possível�vel obstáculo no eixo Y
+				// verifica alcance do obstáculo no eixo Y
 				while (y < range.height && grid[i][y].obstacle)
 				{
 					y++;
 
-					// Ignora nodo abaixo do novo poss�vel obstáculo caso j� tenha sido coberto como obstáculo
-					for (sf::Vector2i& vec : ignoreList)
+					// Ignora nodo abaixo do novo obstáculo caso já tenha sido dado como obstáculo
+					for (sf::Vector2u& vec : ignoreList)
 						if (vec.x == i && vec.y == y)
 							goto OFF_MINOR;
 				}
 			OFF_MINOR:;
 				range.height = y;
 
-				// Reduz tamanho do obstáculo caso haja n�o obstáculos dentro de sua �rea
+				// Reduz tamanho do obstáculo com preferência pela eixo Y, caso não haja nodos obstáculos dentro de sua área
 				for (x = i + 1; x < range.width; x++)
 					for (y = j + 1; y < range.height; y++)
 						if (!grid[x][y].obstacle)
 							range.height = y;
 
-				// Para a �rea do novo obstáculo defini os nodos � n�o serem mais analisados
+				// Para a área do novo obstáculo defini os nodos não serão mais analisados
 				for (x = range.left + 1; x < range.width; x++)
 					for (y = range.top; y < range.height; y++)
 						ignoreList.emplace_back(x, y);
 
+				// Prepara matriz de valores para texturas do obstáculo
 				obsTxtType.resize(range.width - range.left);
 				for (std::vector<Obstacle::ObsType>& vec : obsTxtType)
 					vec.resize(range.height - range.top, Obstacle::ObsType::NEUTRAL);
 
+				// Itera pelos nodos do obstáculo estimado
 				for (h = range.left; h < range.width; h++)
 					for (k = range.top; k < range.height; k++)
 					{
@@ -418,6 +437,7 @@ void Stage::OrganizeObstacles()
 						lDown	= false;
 						rDown	= false;
 
+						// Caso o obstáculo estaja nos limites da fase, pre-define os vizinhos como obstáculo
 						if (k == 0)
 						{
 							up = true;
@@ -439,8 +459,9 @@ void Stage::OrganizeObstacles()
 							counter += 3;
 						}
 
-						for (x = h - (h > 0); x <= (h + ((unsigned)h < grid.size() - 1)); x++)
-							for (y = k - (k > 0); y <= (k + ((unsigned)k < grid[0].size() - 1)); y++)
+						// Itera pelos vizinhos de um nodo
+						for (x = h - (h > 0); x <= (h + (h < grid.size() - 1)); x++)
+							for (y = k - (k > 0); y <= (k + (k < grid[0].size() - 1)); y++)
 							{
 								if (!grid[x][y].obstacle || (x == h && y == k))
 									continue;
@@ -479,13 +500,13 @@ void Stage::OrganizeObstacles()
 							obsTxtType[x][y] = Obstacle::ObsType::LEFT_TOP_EDGE;
 						// verifica se é um bloco de quina interna
 						else if (up && right && down && left && lUp && rUp && lDown && !rDown)
-							obsTxtType[x][y] = Obstacle::ObsType::INNER_RIGHT_BOTTOM;
-						else if (up && right && down && left && lUp && rUp && !lDown && rDown)
-							obsTxtType[x][y] = Obstacle::ObsType::INNER_LEFT_BOTTOM;
-						else if (up && right && down && left && lUp && !rUp && lDown && rDown)
-							obsTxtType[x][y] = Obstacle::ObsType::INNER_RIGHT_TOP;
-						else if (up && right && down && left && !lUp && rUp && lDown && rDown)
 							obsTxtType[x][y] = Obstacle::ObsType::INNER_LEFT_TOP;
+						else if (up && right && down && left && lUp && rUp && !lDown && rDown)
+							obsTxtType[x][y] = Obstacle::ObsType::INNER_RIGHT_TOP;
+						else if (up && right && down && left && lUp && !rUp && lDown && rDown)
+							obsTxtType[x][y] = Obstacle::ObsType::INNER_LEFT_BOTTOM;
+						else if (up && right && down && left && !lUp && rUp && lDown && rDown)
+							obsTxtType[x][y] = Obstacle::ObsType::INNER_RIGHT_BOTTOM;
 						// verifica se é um bloco de aresta
 						else if (right && left && down && !up)
 							obsTxtType[x][y] = Obstacle::ObsType::TOP;
@@ -514,13 +535,28 @@ void Stage::OrganizeObstacles()
 		OFF_MAJOR:;
 		}
 	}
-
-	bool vasco = true;
 };
 void Stage::AddPlayer()
-{};
+{
+	std::list<Player*>& pList = Player::GetPlayerList();
+
+	if (pList.size() >= 2)
+		return;
+
+	Player* p = new Player();
+	sf::Vector2f size(p->GetSize().x + 5.f, 0.f);
+
+	p->SetPosition(pList.front()->GetPosition() + size);
+	this->EntityCreated(p);
+};
 void Stage::RemovePlayer()
-{};
+{
+	std::list<Player*>& pList = Player::GetPlayerList();
+	if (pList.size() <= 1)
+		return;
+
+	this->RemoveEntity(pList.back()->GetId());
+};
 
 void Stage::VerifyGrid() 
 {
@@ -543,7 +579,7 @@ void Stage::VerifyGridOcupation()
 	sf::FloatRect sizeInGrid;
 	sf::UIntRect LimToGrid;
 
-	for (i = 0; i < this->entities.GetSize(); i++)
+	for (i = 0; i < this->entities.Size(); i++)
 	{
 		if (this->entities[i]->GetType() == Type::OBSTACLE)
 		{
@@ -570,7 +606,7 @@ void Stage::DebugVerifyGridOcupation()
 	sf::UIntRect LimToGrid;
 	Entity* aux = nullptr;
 
-	for (i = 0; i < this->entities.GetSize(); i++)
+	for (i = 0; i < this->entities.Size(); i++)
 	{
 		aux = this->entities[i];
 
@@ -609,6 +645,15 @@ void Stage::EntityCreated(Entity* pEntity)
 };
 void Stage::RemoveEntity(unsigned long long int id)
 {
+	std::list<Player*>& pList = Player::GetPlayerList();
+
+	for(Player* p : pList)
+		if (p->GetId() == id)
+		{
+			pList.remove(p);
+			break;
+		}
+
 	for (character::enemy::Enemy*& pEne : enemies)
 		if (pEne->GetId() == id)
 		{
@@ -619,15 +664,26 @@ void Stage::RemoveEntity(unsigned long long int id)
 	this->pColisionManager->Remove(id);
 	this->entities.RemoveEntity(id);
 };
-void Stage::RemoveEntity(const std::vector<unsigned long long int>& ids)
+void Stage::RemoveEntity(const std::list<unsigned long long int>& ids)
 {
-	for(const unsigned long long int& id : ids)
+	std::list<Player*>& pList = Player::GetPlayerList();
+
+	for (const unsigned long long int& id : ids)
+	{
+		for (Player* p : pList)
+			if (p->GetId() == id)
+			{
+				pList.remove(p);
+				break;
+			}
+
 		for (character::enemy::Enemy*& pEne : enemies)
 			if (pEne->GetId() == id)
 			{
 				enemies.remove(pEne);
 				break;
 			}
+	}
 
 	this->pColisionManager->RemoveRange(ids);
 	this->entities.RemoveRange(ids);

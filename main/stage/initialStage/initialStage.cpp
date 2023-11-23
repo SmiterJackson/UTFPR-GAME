@@ -24,17 +24,23 @@ InitialStage::~InitialStage()
 void InitialStage::Initialize()
 {
 	Player* p = new Player();
-	EnemyMelee* e = new EnemyMelee();
+	Skeleton* e = new Skeleton();
+	Demon* d = new Demon();
 
-	p->SetPosition(
+	p->SetPosition(sf::Vector2f(
 		(0 * this->gridScale.x) + (p->GetSize().x / 2.f),
 		(13 * this->gridScale.y) - (p->GetSize().y / 2.f)
-	);
-	e->SetPosition(
+	));
+	e->SetPosition(sf::Vector2f(
 		(16 * this->gridScale.x) + (p->GetSize().x / 2.f),
 		(13 * this->gridScale.y) - (e->GetSize().y / 2.f)
-	);
+	));
+	d->SetPosition(sf::Vector2f(
+		(16 * this->gridScale.x) + (p->GetSize().x / 2.f),
+		(12 * this->gridScale.y) - (e->GetSize().y / 2.f)
+	));
 
 	this->EntityCreated(p);
-	this->EntityCreated(e);
+	//this->EntityCreated(e);
+	this->EntityCreated(d);
 };

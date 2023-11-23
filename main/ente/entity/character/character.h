@@ -9,26 +9,13 @@ namespace character
 	{
 	public:
 		Character();
-		Character(const unsigned short int _type, const sf::Vector2f _size, const sf::Vector2f _tokenSize, const std::string _texturePath,
-			const AnimationSheet _animations = AnimationSheet(), const unsigned int _lifeAmount = 0U, const float _invcDuration = 0.f,
-			const float _deathTime = 1.f, const bool _isStatic = true, const float _scale= 1.0f);
+		Character(const Type _type, const sf::Vector2f _size, const sf::Vector2f _tokenSize, const std::string _texturePath,
+			const AnimationSheet _animations = AnimationSheet(), const short int _lifeAmount = 3i16, 
+			const float _invcDuration = 0.f, const bool _isStatic = true, const float _scale= 1.0f);
 		virtual ~Character();
 
-		const unsigned int GetLifeCount() const { return this->life_counter; };
-		virtual void Damaged()
-		{
-			if (this->invecTimer <= 0.f)
-			{
-				this->life_counter--;
-				this->invecTimer = this->invcFrames;
-			}
-
-			if (this->life_counter <= 0)
-			{
-				this->Died();
-				return;
-			}
-		};
+		const short int GetLifeCount() const { return this->life_counter; };
+		virtual void Damage(unsigned short int damage = 1);
 
 		virtual void Execute();
 		virtual void DebugExecute();
@@ -40,14 +27,15 @@ namespace character
 
 	protected:
 		virtual void Attack() = 0;
-		virtual void Died() = 0;
+		virtual void Dead() = 0;
 
 	protected:
-		const float invcFrames;
+		static const float flickTimer;
 
-		float invecTimer;
-		float deathTimer;
-		float damagedTimer;
-		unsigned int life_counter;
+		const float invcFrames;
+		sf::Text invcText;
+
+		float invcTimer;
+		short int life_counter;
 	};
 }

@@ -112,7 +112,7 @@ void Obstacle::TextureLoad(const std::vector<std::vector<ObsType>>& txtTypeMap, 
 			it = --sprites.equal_range(type).second;
 
 			it->second.setTexture(
-				*GraphicManager::LoadTexture(path, textureMap[type], true)
+				*(pGraphicManager->LoadTexture(path, textureMap[type], true))
 			);
 
 			it->second.setTextureRect(sf::IntRect(0, 0, size.x, size.y));
@@ -147,20 +147,20 @@ void Obstacle::SelfPrint()
 {
 	SpriteMap::iterator spr;
 
-	if(this->showMain) GraphicManager::Draw(this->body);
-	
+	if(this->showMain) pGraphicManager->Draw(this->body);
+
 	for (spr = sprites.begin(); spr != sprites.end(); spr++)
-		GraphicManager::Draw(spr->second);
+		pGraphicManager->Draw(spr->second);
 };
 void Obstacle::DebugSelfPrint()
 {
 	SpriteMap::iterator spr;
 
-	if (this->showMain) GraphicManager::Draw(this->body);
+	if (this->showMain) pGraphicManager->Draw(this->body);
 
 	for (spr = sprites.begin(); spr != sprites.end(); spr++)
-		GraphicManager::Draw(spr->second);
+		pGraphicManager->Draw(spr->second);
 
-	GraphicManager::Draw(this->hitBox);
-	GraphicManager::Draw(this->originCircle);
+	pGraphicManager->Draw(this->hitBox);
+	pGraphicManager->Draw(this->originCircle);
 };

@@ -1,13 +1,15 @@
 #include "ente.h"
 #include "../game.h"
+using namespace manager;
 
-unsigned long long int Ente::counter = 0;
+GraphicManager* Ente::pGraphicManager = GraphicManager::GetInstance();
 float& Ente::elapsedTime = Game::GetElapsedTime();
+unsigned long long int Ente::counter = 0;
 
-Ente::Ente(const unsigned short int _type, const unsigned short int _printPriority):
+Ente::Ente(const Type _type, const PrintPriority _priority):
 	id(counter++), 
 	type(_type),
-	printPriority(_printPriority)
+	priority(_priority)
 {};
 Ente::~Ente()
 {};

@@ -84,7 +84,7 @@
     <ClCompile Include="auxiliary\node\node.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main\ente\entity\character\enemy\enemyMelee\enemyMelee.cpp">
+    <ClCompile Include="main\ente\entity\character\enemy\Skeleton\skeleton.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="main\ente\entity\obstacle\tile\tile.cpp">
@@ -94,6 +94,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="entry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main\ente\entity\character\enemy\Demon\demon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -176,13 +179,19 @@
     <ClInclude Include="auxiliary\node\node.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="main\ente\entity\character\enemy\enemyMelee\enemyMelee.h">
+    <ClInclude Include="main\ente\entity\character\enemy\Skeleton\skeleton.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="main\ente\entity\obstacle\tile\tile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="main\stage\initialStage\initialStage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="auxiliary\traits\performer\performer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="main\ente\entity\character\enemy\Demon\demon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -232,7 +241,6 @@
     <None Include="sfml-system-2.dll" />
     <None Include="sfml-system-d-2.dll" />
     <None Include="sfml-window-2.dll" />
-    <None Include="game Debug.pdb" />
     <None Include="game Debug.exe" />
   </ItemGroup>
   <ItemGroup>

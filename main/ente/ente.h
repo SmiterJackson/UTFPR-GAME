@@ -1,18 +1,8 @@
 #pragma once
 
-#include "stdafx.h"
+#include "manager/graphicManager/graphicManager.h"
 
-const enum PrintPriority : unsigned short int
-{
-	undefined = 0,
-	background,
-	obstacles,
-	characters,
-	projectiles,
-	interfaces,
-	buttons
-};
-const enum Type : unsigned short int
+const enum Type : const unsigned short int
 {
 	PLAYER = 0,
 	ENEMY,
@@ -26,16 +16,17 @@ const enum Type : unsigned short int
 	UNDEFINED
 };
 
+// Classe mais básica das classes envolvidas no jogo
 class Ente 
 {
 public:
-	Ente(const unsigned short int _type = Type::UNDEFINED,
-		const unsigned short int _printPriority = PrintPriority::undefined);
+	Ente(const Type _type = Type::UNDEFINED,
+		 const PrintPriority _priority = PrintPriority::undefined);
 	virtual ~Ente();
 
-	virtual const unsigned long long int GetId() const { return this->id; };
-	const unsigned short int GetType() const { return this->type; };
-	const unsigned short int GetPrintPriority() const { return this->printPriority; };
+	const unsigned long long int GetId() const { return this->id; };
+	const PrintPriority GetPriority() const { return this->priority; };
+	const Type GetType() const { return this->type; };
 
 	virtual void Execute() = 0;
 	virtual void DebugExecute() = 0;
@@ -54,13 +45,18 @@ public:
 	{
 		return this->id != other.id;
 	};
+	virtual bool operator== (const Ente& other)
+	{
+		return this->id == other.id;
+	};
 
 protected:
+	static manager::GraphicManager* pGraphicManager;
 	static float& elapsedTime;
 
 	const unsigned long long int id;
-	const unsigned short int type;
-	const unsigned short int printPriority;
+	const PrintPriority priority;
+	const Type type;
 
 private:
 	static unsigned long long int counter;

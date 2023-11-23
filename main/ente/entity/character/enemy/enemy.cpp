@@ -17,51 +17,30 @@ Enemy::Enemy() :
 	Character(
 		Type::ENEMY, sf::Vector2f(0.5f, 0.5f), sf::Vector2f(0.f, 0.f), ""
 	),
-	agroing(false),
+	target(nullptr),
 	agroRange(0.f),
-	target(nullptr)
+	agroing(false)
 {
 	pInputSub->AttachObs(this);
 };
 Enemy::Enemy(const sf::Vector2f _size, const sf::Vector2f _tokenSize, const std::string _texturePath, 
-		const AnimationSheet _animations, const unsigned int _lifeAmount, const float _invcDuration, 
-		const float _deathTime,	const float _agroRange,	const bool _isStatic, const float _scale) :
+		const AnimationSheet _animations, const short int _lifeAmount, const float _invcDuration,
+		const float _agroRange,	const bool _isStatic, const float _scale) :
 	Character(
 		Type::ENEMY, _size, _tokenSize, _texturePath, _animations,
-		_lifeAmount, _invcDuration, _deathTime, _isStatic, _scale
+		_lifeAmount, _invcDuration, _isStatic, _scale
 	),
-	agroing(false),
+	target(nullptr),
 	agroRange(_agroRange),
-	target(nullptr)
+	agroing(false)
 {
 	pInputSub->AttachObs(this);
 };
 Enemy::~Enemy() 
-{};
-
-void Enemy::UpdateObs(const trait::Subject* alteredSub)
 {
-	if (alteredSub == nullptr || alteredSub != pInputSub)
-		return;
-
-	unsigned int  i = 0, j = 0;
-	sf::Event _event = pInputSub->GetEvent();
-
-	bool ctrl_pressed  = sf::Keyboard::isKeyPressed(sf::Keyboard::LControl);
-	bool shift_pressed = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift);
-
-	if(_event.type == sf::Event::EventType::KeyPressed)
-	{
-		if(_event.key.code == sf::Keyboard::P && ctrl_pressed && shift_pressed)
-		showAStar = !showAStar;
-
-		if(!showAStar)
-			for (i = 0; i < grid.size(); i++)
-				for (j = 0; j < grid[i].size(); j++)
-					if (!grid[i][j].obstacle)
-						gridBlock[i][j].first.setFillColor(sf::Color(0U, 0U, 255U, 100U));
-	}
+	pInputSub->DettachObs(this);
 };
+
 void Enemy::UpdateTarget()
 {
 	sf::Vector2f srcPos(this->GetPosition());
@@ -81,11 +60,11 @@ void Enemy::UpdateTarget()
 	}
 };
 
-Enemy::A_STAR_RETURN_TYPE Enemy::AStarAlgorithm(const sf::Vector2i srcGridPos, const sf::Vector2i trgGridPos)
+Enemy::DIRECTION Enemy::AStarAlgorithm(const sf::Vector2i srcGridPos, const sf::Vector2i trgGridPos)
 {
 	if (CAST(srcGridPos.x) >= grid.size() || CAST(srcGridPos.y) >= grid[0].size() ||
 		CAST(trgGridPos.x) >= grid.size() || CAST(trgGridPos.y) >= grid[0].size())
-		return A_STAR_RETURN_TYPE::ERROR;
+		return DIRECTION::ERROR;
 
 	unsigned int x = 0, y = 0;
 	double delta = 0.0;
@@ -96,7 +75,7 @@ Enemy::A_STAR_RETURN_TYPE Enemy::AStarAlgorithm(const sf::Vector2i srcGridPos, c
 	sf::Vector2i start = current->position, next;
 
 	if (current == nullptr || target == nullptr)
-		return A_STAR_RETURN_TYPE::ERROR;
+		return DIRECTION::ERROR;
 
 	for(x = 0; x < grid.size(); x++)
 		for (y = 0; y < grid[x].size(); y++)
@@ -151,7 +130,7 @@ Enemy::A_STAR_RETURN_TYPE Enemy::AStarAlgorithm(const sf::Vector2i srcGridPos, c
 		}
 	}
 	if (current != target)
-		return A_STAR_RETURN_TYPE::ERROR;
+		return DIRECTION::ERROR;
 
 	if (showAStar)
 		tracePath(*current);
@@ -162,18 +141,18 @@ Enemy::A_STAR_RETURN_TYPE Enemy::AStarAlgorithm(const sf::Vector2i srcGridPos, c
 	}
 	next = current->position;
 
-	return A_STAR_RETURN_TYPE(
-		((next.x <  start.x && next.y <  start.y) * A_STAR_RETURN_TYPE::UP_LEFT		) +
-		((next.x == start.x && next.y <  start.y) * A_STAR_RETURN_TYPE::UP			) +
-		((next.x >  start.x && next.y <  start.y) * A_STAR_RETURN_TYPE::UP_RIGHT	) +
-		((next.x <  start.x && next.y == start.y) * A_STAR_RETURN_TYPE::LEFT		) +
-		((next.x >  start.x && next.y == start.y) * A_STAR_RETURN_TYPE::RIGHT		) +
-		((next.x <  start.x && next.y >  start.y) * A_STAR_RETURN_TYPE::DOWN_LEFT	) +
-		((next.x == start.x && next.y >  start.y) * A_STAR_RETURN_TYPE::DOWN		) +
-		((next.x >  start.x && next.y >  start.y) * A_STAR_RETURN_TYPE::DOWN_RIGHT	)
+	return DIRECTION(
+		((next.x <  start.x && next.y <  start.y) * DIRECTION::UP_LEFT	) +
+		((next.x == start.x && next.y <  start.y) * DIRECTION::UP		) +
+		((next.x >  start.x && next.y <  start.y) * DIRECTION::UP_RIGHT	) +
+		((next.x <  start.x && next.y == start.y) * DIRECTION::LEFT		) +
+		((next.x >  start.x && next.y == start.y) * DIRECTION::RIGHT	) +
+		((next.x <  start.x && next.y >  start.y) * DIRECTION::DOWN_LEFT) +
+		((next.x == start.x && next.y >  start.y) * DIRECTION::DOWN		) +
+		((next.x >  start.x && next.y >  start.y) * DIRECTION::DOWN_RIGHT)
 	);
 };
-void Enemy::tracePath(Node& trg) 
+void Enemy::tracePath(Node& trg)
 {
 	unsigned int i = 0, j = 0;
 	Node* current = &trg;
@@ -182,7 +161,7 @@ void Enemy::tracePath(Node& trg)
 
 	for (i = 0; i < grid.size(); i++)
 		for (j = 0; j < grid[i].size(); j++)
-			if(!grid[i][j].obstacle)
+			if (!grid[i][j].obstacle)
 				gridBlock[i][j].first.setFillColor(sf::Color(0U, 0U, 255U, 100U));
 
 	while (current->previous != nullptr)

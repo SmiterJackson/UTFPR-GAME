@@ -7,9 +7,8 @@ using namespace obstacle;
 using namespace character;
 using namespace character::enemy;
 
-#define COLISION_CHECK_TIMER 0.01f
+#define COLISION_CHECK_AMOUNT 100.f
 #define CAST(x) static_cast<Entity*>(x)
-#define SF_ABS(vec) sf::Vector2f(std::abs(vec.x), std::abs(vec.y))
 
 stage::Stage* ColisionManager::pOwner = nullptr;
 ColisionManager* ColisionManager::instance = nullptr;
@@ -32,6 +31,7 @@ void ColisionManager::DeconstructInstance()
 };
 
 ColisionManager::ColisionManager() :
+	pGraphicManager(GraphicManager::GetInstance()),
 	players(Player::GetPlayerList()),
 	obstacles(),
 	enemies(),
@@ -53,7 +53,7 @@ void ColisionManager::Add(Entity* entity)
 	default:
 		break;
 	}
-};
+}
 void ColisionManager::AddRange(EntityList* _entities)
 {
 	unsigned int i = 0;
@@ -61,9 +61,9 @@ void ColisionManager::AddRange(EntityList* _entities)
 	if (_entities == nullptr)
 		return;
 
-	for (i = 0; i < _entities->GetSize(); i++)
+	for (i = 0; i < _entities->Size(); i++)
 		this->Add((*_entities)[i]);
-};
+}
 void ColisionManager::Remove(const unsigned long long int entityId)
 {
 	std::list<Obstacle*>::const_iterator oIt;
@@ -82,10 +82,10 @@ void ColisionManager::Remove(const unsigned long long int entityId)
 			this->obstacles.erase(oIt);
 			return;
 		}
-};
-void ColisionManager::RemoveRange(const std::vector<unsigned long long int>& entitiesIds)
+}
+void ColisionManager::RemoveRange(const std::list<unsigned long long int>& entitiesIds)
 {
-	std::vector<unsigned long long int>::const_iterator idIt;
+	std::list<unsigned long long int>::const_iterator idIt;
 	std::list<Obstacle*>::const_iterator oIt;
 	std::vector<Enemy*>::const_iterator eIt;
 
@@ -107,69 +107,103 @@ void ColisionManager::RemoveRange(const std::vector<unsigned long long int>& ent
 
 	END:;
 	}
-};
+}
 
 void ColisionManager::UpdateColisions(const float& elapsedTime)
 {
-	std::list<Obstacle*> obstaclesInCamera;
-	std::list<Enemy*> enemiesInCamera;
+	std::list<Entity*> entityList, obstaclesInCamera, enemiesInCamera;
 
 	this->accumulator += elapsedTime;
-	if (this->accumulator >= COLISION_CHECK_TIMER)
+	if (this->accumulator >= (1.f / COLISION_CHECK_AMOUNT))
 	{
-		this->accumulator -= COLISION_CHECK_TIMER;
+		this->accumulator -= (1.f / COLISION_CHECK_AMOUNT);
 
-		obstaclesInCamera = GraphicManager::GetCameraEntities(this->obstacles);
-		enemiesInCamera = GraphicManager::GetCameraEntities(this->enemies);
+		for (Obstacle* o : this->obstacles)
+			entityList.push_back(CAST(o));
+
+		obstaclesInCamera = pGraphicManager->GetCameraEntities(entityList);
+		entityList.clear();
+
+		for (Enemy* e : this->enemies)
+			entityList.push_back(CAST(e));
+
+		enemiesInCamera = pGraphicManager->GetCameraEntities(entityList);
 
 		for (Player* p : this->players)
 		{
+			for (Entity* e : obstaclesInCamera)
+				this->CheckEntityColision(CAST(p), e, elapsedTime);
+
+			for (Entity* e : enemiesInCamera)
+			{
+				for (Entity* o : obstaclesInCamera)
+					this->CheckEntityColision(e, o, elapsedTime);
+
+				this->CheckEntityColision(CAST(p), e, elapsedTime);
+				this->CheckEntityColision(e, CAST(p), elapsedTime);
+
+				CheckMapColision(e);
+			}
+
 			CheckMapColision(CAST(p));
 			CheckCameraColision(p);
-
-			for (Obstacle* o : obstaclesInCamera)
-				this->CheckEntityColision(CAST(p), CAST(o), elapsedTime);
-
-			for (Enemy* e : enemiesInCamera)
-			{
-				CheckMapColision(CAST(e));
-
-				for (Obstacle* o : obstaclesInCamera)
-					this->CheckEntityColision(CAST(e), CAST(o), elapsedTime);
-
-				this->CheckEntityColision(CAST(p), CAST(e), elapsedTime);
-				this->CheckEntityColision(CAST(e), CAST(p), elapsedTime);
-			}
 		}
 	}
-};
+}
 
 void ColisionManager::CheckEntityColision(Entity* entity, Entity* other, float elapsed)
 {
-	sf::Vector2f vel(entity->GetVelocity());
+	sf::Vector2f vel(entity->GetVelocity() * elapsed);
 
 	if (vel.x == 0 && vel.y == 0)
 		return;
 
+	std::list<Entity::Hitbox> hitboxes = entity->GetHitBoxes();
 	sf::Vector2f pos(other->GetPosition());
-	sf::Vector2f size(other->GetSize());
-	sf::Vector2f entSize(entity->GetSize());
-	sf::Vector2<short int> normals(0, 0);
+	sf::Vector2f origin;
 
-	float delta = 0.f;
-	bool intersected = false;
+	for (Entity::Hitbox hitbox : hitboxes)
+	{
+		origin = hitbox.pos;
+		hitbox.size += other->GetSize();
+		hitbox.pos = pos - hitbox.size / 2.f;
 
-	HitBox hitbox(
-		pos - (entSize / 2.f) - (size / 2.f),
-		size + entSize
+		if (RayCast(origin, vel, hitbox) && hitbox.delta <= 1.f)
+			entity->EntityColision(other, hitbox.delta * hitbox.normals * sf::abs(vel));
+	}
+}
+void ColisionManager::CheckCameraColision(Player* player)
+{
+	sf::Vector2f dist(player->GetPosition() - pGraphicManager->GetViewPosition());
+	sf::Vector2f radious((pGraphicManager->GetViewSize() - player->GetSize()) / 2.f);
+	sf::Vector2f intersection(
+		fabs(dist.x) - radious.x,
+		fabs(dist.y) - radious.y
 	);
 
-	pos = entity->GetPosition();
-	intersected = VectToHitBox(pos, vel * elapsed, hitbox, normals, delta);
+	if (intersection.x > 0.f || intersection.y > 0.f)
+	{
+		/*
+		if (intersection.x <= 0.f)
+			intersection.x = 0.f;
 
-	if (intersected && delta <= 1.f)
-		entity->EntityColision(other, delta * normals * elapsed * SF_ABS(vel));
-};
+		if (intersection.y <= 0.f)
+			intersection.y = 0.f;
+
+		if (dist.x > 0.f)
+			intersection.x = -(intersection.x);
+
+		if (dist.y > 0.f)
+			intersection.y = -(intersection.y);
+		*/
+		// versao branchless
+intersection = sf::Vector2f(
+	(intersection.x * ((1.f - (2.f * (dist.x > 0.f))) * (intersection.x > 0.f))),
+	(intersection.y * ((1.f - (2.f * (dist.y > 0.f))) * (intersection.y > 0.f)))
+);
+player->CameraColision(intersection);
+	}
+}
 void ColisionManager::CheckMapColision(Entity* entity)
 {
 	sf::Vector2f dist(entity->GetPosition() - this->pOwner->GetWorldPosition());
@@ -202,66 +236,118 @@ void ColisionManager::CheckMapColision(Entity* entity)
 
 		entity->MapColision(intersection);
 	}
-};
-void ColisionManager::CheckCameraColision(Player* player)
+}
+
+bool ColisionManager::RectsOverlaping(const sf::FloatRect& left, const sf::FloatRect& right)
 {
-	sf::Vector2f dist(player->GetPosition() - GraphicManager::GetViewPosition());
-	sf::Vector2f radious((GraphicManager::GetViewSize() - player->GetSize()) / 2.f);
-	sf::Vector2f intersection(
-		fabs(dist.x) - radious.x,
-		fabs(dist.y) - radious.y
+	return (left.left < right.width && left.width > right.left &&
+		left.top < right.height && left.height > right.top);
+}
+bool ColisionManager::RayCastTarget(Entity* entity, Entity* other, float elapsed, sf::Vector2f velocity)
+{
+	ColisionManager* colMan = GetInstance();
+
+	if (velocity.x == 0 && velocity.y == 0 || colMan == nullptr)
+		return false;
+
+	std::list<Entity::Hitbox> entityHitboxes = entity->GetHitBoxes();
+	std::list<Entity::Hitbox> hitboxes;
+	sf::Vector2f origin;
+	sf::Vector2f pos;
+
+	for (Obstacle*& obs : colMan->obstacles)
+		for (Entity::Hitbox hitbox : entityHitboxes)
+		{
+			pos = obs->GetPosition();
+
+			origin = hitbox.pos;
+			hitbox.size += obs->GetSize();
+			hitbox.pos = pos - hitbox.size / 2.f;
+
+			if (GetInstance()->RayCast(origin, velocity, hitbox))
+				hitboxes.push_back(hitbox);
+		}
+	hitboxes.sort(
+		[&](const Entity::Hitbox& l, const Entity::Hitbox& r)
+		{
+			return l.delta < r.delta;
+		}
 	);
 
-	if (intersection.x > 0.f || intersection.y > 0.f)
+	pos = other->GetPosition();
+	for (Entity::Hitbox hitbox : entityHitboxes)
 	{
-		/*
-		if (intersection.x <= 0.f)
-			intersection.x = 0.f;
+		origin = hitbox.pos;
+		hitbox.size += other->GetSize();
+		hitbox.pos = pos - hitbox.size / 2.f;
 
-		if (intersection.y <= 0.f)
-			intersection.y = 0.f;
-
-		if (dist.x > 0.f)
-			intersection.x = -(intersection.x);
-
-		if (dist.y > 0.f)
-			intersection.y = -(intersection.y);
-		*/
-		// versao branchless
-		intersection = sf::Vector2f(
-			(intersection.x * ((1.f - (2.f * (dist.x > 0.f))) * (intersection.x > 0.f))),
-			(intersection.y * ((1.f - (2.f * (dist.y > 0.f))) * (intersection.y > 0.f)))
-		);
-		player->CameraColision(intersection);
+		// Verifica se a entidade colide com outra antes de qualquer obstáculo, tendo um caminho livre
+		if (GetInstance()->RayCast(origin, velocity, hitbox))
+		{
+			if(hitboxes.size() > 0 && hitbox.delta > hitboxes.front().delta)
+				return false;
+			return true;
+		}
 	}
-};
 
-bool ColisionManager::VectToHitBox(const sf::Vector2f& origin, const sf::Vector2f& dir, const HitBox& target,
-								   sf::Vector2<short>& normal, float& delta)
+	return false;
+}
+bool ColisionManager::ValidSpace(const sf::FloatRect& bounds)
 {
-	sf::Vector2f invdir(1.0f / dir);
-	sf::Vector2f t_near((target.pos - origin) * invdir);
-	sf::Vector2f t_far((target.pos + target.size - origin) * invdir);
-	float far = 0.f;
+	std::list<Obstacle*> obstacles = ColisionManager::GetInstance()->obstacles;
+	sf::FloatRect obsBounds;
+	bool valid = true;
+
+	obstacles.remove_if(
+		[&](const Obstacle* obs)
+		{
+			obsBounds = obs->GetBounds();
+			return (obsBounds.width < bounds.left ||
+					obsBounds.left > bounds.width ||
+					obsBounds.height < bounds.top ||
+					obsBounds.top > bounds.height );
+		}
+	);
+
+	for(Obstacle* obs : obstacles)
+	{
+		obsBounds = obs->GetBounds();
+
+		valid = !RectsOverlaping(bounds, obsBounds);
+
+		if (!valid)
+			break;
+	}
+
+	return valid;
+}
+bool ColisionManager::RayCast(const sf::Vector2f& origin, const sf::Vector2f& dir, Entity::Hitbox& trg)
+{
+	sf::Vector2f t_near((trg.pos - origin) / dir);
+	sf::Vector2f t_far((trg.pos + trg.size - origin) / dir);
+	float delta_far = 0.f;
 
 	if (std::isnan(t_far.x) || std::isnan(t_far.y) || std::isnan(t_near.x) || std::isnan(t_near.y))
 		return false;
 
-	if (t_near.x > t_far.x) std::swap(t_near.x, t_far.x);
-	if (t_near.y > t_far.y) std::swap(t_near.y, t_far.y);
+	if (t_near.x > t_far.x) 
+		std::swap(t_near.x, t_far.x);
+	if (t_near.y > t_far.y) 
+		std::swap(t_near.y, t_far.y);
 
 	if (t_near.x > t_far.y || t_near.y > t_far.x)
 		return false;
 
-	delta = std::max(t_near.x, t_near.y);
-	far = std::min(t_far.x, t_far.y);
+	trg.delta = std::max(t_near.x, t_near.y);
+	delta_far = std::min(t_far.x, t_far.y);
 
-	if (far < 0)
+	if (delta_far < 0)
 		return false;
 
-	normal = sf::Vector2<short>(
-		(t_near.x > t_near.y) * (1 - (2 * (invdir.x < 0))),
-		(t_near.x < t_near.y) * (1 - (2 * (invdir.y < 0)))
+	trg.pos = origin + t_near * dir;
+	trg.normals = sf::Vector2<short>(
+		short((t_near.x > t_near.y) * (1 - (2 * (dir.x < 0)))),
+		short((t_near.x < t_near.y) * (1 - (2 * (dir.y < 0))))
 	);
 
 	return true;

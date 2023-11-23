@@ -9,12 +9,12 @@ public:
 	EntityList();
 	~EntityList();
 
-	unsigned int GetSize() { return this->entities.Size(); };
+	unsigned int Size() { return entities.Size(); }
 
 	void AddEntity(Entity* entity);
-	void AddRange(std::list<Entity*>* _entities);
+	void AddRange(std::list<Entity*>& _entities);
 	void RemoveEntity(const unsigned long long int entityId);
-	void RemoveRange(const std::vector<unsigned long long int>& entityId);
+	void RemoveRange(const std::list<unsigned long long int>& entityId);
 
 	Entity* operator[](const unsigned int& val)
 	{

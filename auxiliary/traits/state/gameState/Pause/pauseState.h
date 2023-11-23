@@ -15,6 +15,7 @@ namespace trait
 			void Execute();
 			void DebugExecute();
 			void Print();
+			void DebugPrint();
 
 			void MainMenu();
 			void Pause();

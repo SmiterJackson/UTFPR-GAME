@@ -5,7 +5,7 @@
 namespace GUI 
 {
 	typedef std::pair<sf::Texture*, std::vector<sf::Sprite>> Layer;
-	class Parallax
+	class Parallax : public Ente
 	{
 	public:
 		Parallax(const std::vector<std::string>& paths = std::vector<std::string>(), const float _scale = 1.f);
@@ -16,8 +16,14 @@ namespace GUI
 		void SetSizeCoefficient(float _scale);
 
 		void ResetBackground();
-		void SelfPrint();
+
 		void Execute();
+		void DebugExecute();
+		void SelfPrint();
+		void DebugSelfPrint();
+
+		void Print();
+		void Update();
 
 	private:
 		std::vector<Layer> backGrounds;

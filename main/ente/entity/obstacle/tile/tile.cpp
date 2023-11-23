@@ -1,7 +1,7 @@
 #include "tile.h"
 using namespace obstacle;
 
-#define PATH "resources/textures/tile_sheet/tile_sheet.png"
+#define PATH "resources/textures/tile_sheet/main_tiles.png"
 
 #define WIDTH  32
 #define HEIGHT 32
@@ -10,20 +10,20 @@ using namespace obstacle;
 #define VALUE(key, value) Obstacle::TextureMap::value_type(key, value)
 
 Obstacle::TextureMap Tile::map = {
-	VALUE(ObsType::NEUTRAL,				RECT(3, 0)),
-	VALUE(ObsType::LEFT_TOP_EDGE,		RECT(0, 0)),
-	VALUE(ObsType::TOP,					RECT(1, 0)),
-	VALUE(ObsType::RIGHT_TOP_EDGE,		RECT(2, 0)),
-	VALUE(ObsType::LEFT,				RECT(0, 1)),
-	VALUE(ObsType::MIDDLE,				RECT(1, 1)),
-	VALUE(ObsType::RIGHT,				RECT(2, 1)),
-	VALUE(ObsType::LEFT_BOTTOM_EDGE,	RECT(0, 2)),
-	VALUE(ObsType::BOTTOM,				RECT(1, 2)),
-	VALUE(ObsType::RIGHT_BOTTOM_EDGE,	RECT(2, 2)),
-	VALUE(ObsType::INNER_LEFT_TOP,		RECT(2, 5)),
-	VALUE(ObsType::INNER_RIGHT_TOP,		RECT(0, 5)),
-	VALUE(ObsType::INNER_LEFT_BOTTOM,	RECT(2, 3)),
-	VALUE(ObsType::INNER_RIGHT_BOTTOM,	RECT(0, 3))
+	VALUE(ObsType::NEUTRAL,				RECT(0, 0)),
+	VALUE(ObsType::LEFT_TOP_EDGE,		RECT(3, 0)),
+	VALUE(ObsType::TOP,					RECT(4, 0)),
+	VALUE(ObsType::RIGHT_TOP_EDGE,		RECT(5, 0)),
+	VALUE(ObsType::LEFT,				RECT(3, 1)),
+	VALUE(ObsType::MIDDLE,				RECT(4, 1)),
+	VALUE(ObsType::RIGHT,				RECT(5, 1)),
+	VALUE(ObsType::LEFT_BOTTOM_EDGE,	RECT(3, 2)),
+	VALUE(ObsType::BOTTOM,				RECT(4, 2)),
+	VALUE(ObsType::RIGHT_BOTTOM_EDGE,	RECT(5, 2)),
+	VALUE(ObsType::INNER_LEFT_TOP,		RECT(1, 0)),
+	VALUE(ObsType::INNER_RIGHT_TOP,		RECT(2, 0)),
+	VALUE(ObsType::INNER_LEFT_BOTTOM,	RECT(1, 1)),
+	VALUE(ObsType::INNER_RIGHT_BOTTOM,	RECT(2, 1))
 };
 
 Tile::Tile() :
